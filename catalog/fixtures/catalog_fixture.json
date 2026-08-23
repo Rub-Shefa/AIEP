@@ -1,0 +1,17 @@
+[
+  {
+    "model": "catalog.category",
+    "pk": 1,
+    "fields": { "name": "Vitamins & Supplements", "parent_category": null }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 2,
+    "fields": { "name": "Sleep & Recovery", "parent_category": 1 }
+  },
+  {
+    "model": "catalog.category",
+    "pk": 3,
+    "fields": { "name": "Mental Wellness", "parent_category": null }
+  }
+]

@@ -1,0 +1,38 @@
+from django.db import models
+from django.contrib.auth.models import User
+
+class CustomerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')
+    budget_range = models.CharField(max_length=50, blank=True)
+    location = models.CharField(max_length=255, blank=True)
+    health_preferences = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Customer: {self.user.username}"
+
+class SellerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='seller_profile')
+    store_name = models.CharField(max_length=255)
+    verification_status = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.store_name
+
+class ProviderProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='provider_profile')
+    specialty = models.CharField(max_length=100)
+    budget_tier = models.CharField(max_length=50, blank=True)
+    consultation_type = models.CharField(max_length=50, blank=True)
+    credential_status = models.CharField(max_length=50, default='Pending')
+
+    def __str__(self):
+        return f"Provider: {self.user.username} ({self.specialty})"
+
+class CourierProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='courier_profile')
+    vehicle_type = models.CharField(max_length=50)
+    service_zone = models.CharField(max_length=100)
+    availability_status = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Courier: {self.user.username}"
