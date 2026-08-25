@@ -1,0 +1,324 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}HealthFlow · Smart Health Commerce & Logistics{% endblock %}
+
+{% block content %}
+<main class="bg-paper text-ink">
+
+  <!-- HERO SECTION (Vertically Centered to match Image 1) -->
+  <section class="relative min-h-[calc(100vh-70px)] flex items-center justify-center overflow-hidden bg-ink py-16 text-white sm:py-24">
+    <!-- Background Grid Pattern & Subtle Blue/Teal Ambient Glow -->
+    <div class="grid-pattern absolute inset-0 opacity-30"></div>
+    <div class="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-teal/10 via-cyan-500/10 to-blue-600/10 blur-[140px]"></div>
+
+    <div class="relative mx-auto max-w-7xl px-5 sm:px-8 w-full">
+      <div class="grid items-center gap-12 lg:grid-cols-12">
+        
+        <!-- Left: Copy & Call-To-Actions -->
+        <div class="space-y-6 lg:col-span-7">
+          <div class="inline-flex items-center gap-2.5 rounded-full border border-teal/40 bg-teal/10 px-4 py-1.5 text-xs font-semibold text-lime shadow-[0_0_15px_rgba(18,184,166,0.15)]">
+            <span class="h-2 w-2 rounded-full bg-lime animate-pulse"></span>
+            Real-Time Medical Supply Chain
+          </div>
+
+          <h1 class="text-4xl font-extrabold tracking-tight sm:text-6xl sm:leading-[1.1]">
+            Precision logistics for <span class="bg-gradient-to-r from-teal via-emerald-400 to-lime bg-clip-text text-transparent">modern healthcare.</span>
+          </h1>
+
+          <p class="max-w-xl text-base text-slate-300 sm:text-lg">
+            HealthFlow coordinates pharmaceutical dispatch, verified cold-chain delivery, and intelligent inventory monitoring through a unified digital grid.
+          </p>
+
+          <!-- Interactive Slide-Fill Buttons -->
+          <div class="flex flex-wrap items-center gap-4 pt-2">
+            {% if user.is_authenticated %}
+              <a href="#" class="btn-slide-left rounded-xl bg-lime px-7 py-3.5 text-sm font-extrabold text-ink shadow-lg shadow-lime/20 hover:text-white hover:shadow-teal/30">
+                <span>Go to Dashboard</span>
+              </a>
+            {% else %}
+              <a href="{% url 'register' %}" class="btn-slide-left rounded-xl bg-lime px-7 py-3.5 text-sm font-extrabold text-ink shadow-lg shadow-lime/20 hover:text-white hover:shadow-teal/30">
+                <span>Create Account</span>
+              </a>
+              <a href="{% url 'login' %}" class="btn-slide-right rounded-xl border border-slate-700 bg-slate-900/80 px-7 py-3.5 text-sm font-semibold text-slate-200 hover:border-teal hover:text-white">
+                <span>Sign In</span>
+              </a>
+            {% endif %}
+          </div>
+
+          <!-- Trending Topics Row -->
+          <div class="flex flex-wrap items-center gap-3 pt-4 text-xs text-slate-400">
+            <span class="font-mono text-xs uppercase tracking-widest text-slate-400">🔥 TRENDING:</span>
+            <span class="rounded-full border border-teal/40 bg-teal/10 px-3.5 py-1 text-teal font-medium backdrop-blur-sm hover:border-teal transition cursor-pointer">Cold-Chain Vax</span>
+            <span class="rounded-full border border-lime/40 bg-lime/10 px-3.5 py-1 text-lime font-medium backdrop-blur-sm hover:border-lime transition cursor-pointer">24h Dispatch</span>
+            <span class="rounded-full border border-slate-700 bg-slate-900/90 px-3.5 py-1 text-slate-300 font-medium hover:border-slate-500 transition cursor-pointer">Smart Inventory</span>
+          </div>
+        </div>
+
+        <!-- Right: Dashboard Metric Preview Card -->
+        <div class="lg:col-span-5">
+          <div class="glow-telemetry relative rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+            
+            <!-- floating badge -->
+            <div class="absolute -right-3 -top-3 rotate-6 rounded-full bg-lime px-4 py-1.5 text-xs font-extrabold text-ink shadow-lg shadow-lime/20">
+              ⚡ LIVE
+            </div>
+
+            <!-- Window Bar -->
+            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div class="flex items-center gap-2">
+                <span class="h-3 w-3 rounded-full bg-rose-500/80"></span>
+                <span class="h-3 w-3 rounded-full bg-amber-500/80"></span>
+                <span class="h-3 w-3 rounded-full bg-emerald-500/80"></span>
+              </div>
+              <span class="font-mono text-[10px] uppercase tracking-widest text-slate-400">SYSTEM TELEMETRY</span>
+            </div>
+
+            <!-- Live Status Indicator -->
+            <div class="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition-all duration-300 hover:border-teal/50 hover:bg-slate-950/90">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-teal/20 text-teal shadow-[0_0_12px_rgba(18,184,166,0.3)]">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  </div>
+                  <div>
+                    <p class="text-xs font-semibold text-white">Grid Status</p>
+                    <p class="font-mono text-[11px] text-teal">Optimal Operation</p>
+                  </div>
+                </div>
+                <span class="rounded-lg bg-emerald-500/10 px-2.5 py-1 font-mono text-xs text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]">99.98%</span>
+              </div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition-all duration-300 hover:border-lime/40">
+                <p class="font-mono text-[11px] uppercase text-slate-400">AVG DISPATCH</p>
+                <p class="mt-1 text-2xl font-bold text-lime drop-shadow-[0_0_8px_rgba(217,255,93,0.3)]">14.2 min</p>
+              </div>
+              <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition-all duration-300 hover:border-teal/40">
+                <p class="font-mono text-[11px] uppercase text-slate-400">COLD CHAIN</p>
+                <p class="mt-1 text-2xl font-bold text-teal drop-shadow-[0_0_8px_rgba(18,184,166,0.3)]">100% Verified</p>
+              </div>
+            </div>
+
+            <!-- Active Track Line -->
+            <div class="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition-all duration-300 hover:border-slate-700">
+              <div class="flex justify-between font-mono text-xs text-slate-400">
+                <span>Shipment #HF-8821</span>
+                <span class="text-lime font-semibold">In Transit</span>
+              </div>
+              <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-800">
+                <div class="h-full w-3/4 rounded-full bg-gradient-to-r from-teal to-lime animate-pulse"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST METRICS BAR -->
+  <section class="border-y border-slate-200 bg-white py-10">
+    <div class="mx-auto max-w-7xl px-5 sm:px-8">
+      <div class="grid grid-cols-2 gap-8 text-center md:grid-cols-4">
+        <div class="group transition duration-300 hover:scale-105">
+          <p class="font-mono text-3xl font-extrabold text-ink sm:text-4xl">15k+</p>
+          <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Completed Orders</p>
+        </div>
+        <div class="group transition duration-300 hover:scale-105">
+          <p class="font-mono text-3xl font-extrabold text-ink sm:text-4xl">&lt; 30m</p>
+          <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Emergency Route Speed</p>
+        </div>
+        <div class="group transition duration-300 hover:scale-105">
+          <p class="font-mono text-3xl font-extrabold text-teal sm:text-4xl">100%</p>
+          <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Compliance Rating</p>
+        </div>
+        <div class="group transition duration-300 hover:scale-105">
+          <p class="font-mono text-3xl font-extrabold text-ink sm:text-4xl">24/7</p>
+          <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-500">Active Monitoring</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAPABILITIES / FEATURES GRID -->
+  <section id="features" class="py-20 sm:py-28">
+    <div class="mx-auto max-w-7xl px-5 sm:px-8">
+      
+      <div class="max-w-2xl">
+        <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">ENGINEERED FOR RELIABILITY</p>
+        <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+          Core infrastructure designed for <span class="bg-gradient-to-r from-teal via-teal-400 to-lime bg-clip-text text-transparent">sensitive supply lines.</span>
+        </h2>
+      </div>
+
+      <div class="mt-14 grid gap-8 md:grid-cols-3">
+        
+        <!-- Card 1 -->
+        <div class="group rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-teal hover:shadow-xl hover:shadow-teal/10">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-ink text-lime transition-colors duration-300 group-hover:bg-teal group-hover:text-white">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3 class="mt-6 text-xl font-bold text-ink">Verifiable Cold Chain</h3>
+          <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+            Continuous temperature telemetry logged at every node, ensuring biological and pharmaceutical integrity.
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="group rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-teal hover:shadow-xl hover:shadow-teal/10">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-ink text-teal transition-colors duration-300 group-hover:bg-teal group-hover:text-white">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <h3 class="mt-6 text-xl font-bold text-ink">Automated Dispatch</h3>
+          <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+            Smart routing algorithms match critical supply orders with the fastest verified transit partners instantly.
+          </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="group rounded-2xl border border-slate-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-teal hover:shadow-xl hover:shadow-teal/10">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-ink text-lime transition-colors duration-300 group-hover:bg-teal group-hover:text-white">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <h3 class="mt-6 text-xl font-bold text-ink">Unified Inventory</h3>
+          <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+            Full visibility across stock levels, expiration windows, and demand forecasts from a single dashboard.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BOTTOM BANNER -->
+  <section class="bg-paper py-16 text-white">
+    <div class="mx-auto max-w-7xl px-5 sm:px-8">
+      <div class="flex flex-col items-center justify-between gap-8 rounded-3xl border border-slate-800 bg-ink p-8 text-center sm:p-12 lg:flex-row lg:text-left shadow-2xl transition duration-300 hover:border-teal/40">
+        <div>
+          <p class="font-mono text-xs uppercase tracking-[0.2em] text-teal">🚀 JOIN THE NETWORK</p>
+          <h2 class="mt-2 text-2xl font-extrabold text-white sm:text-3xl">
+            Ready to optimize your <span class="bg-gradient-to-r from-teal via-teal-400 to-lime bg-clip-text text-transparent">healthcare supply chain</span>?
+          </h2>
+          <p class="mt-2 text-sm text-slate-400">Join the next-generation distribution network today.</p>
+        </div>
+        {% if not user.is_authenticated %}
+          <a href="{% url 'register' %}" class="btn-slide-diagonal shrink-0 rounded-xl bg-lime px-8 py-4 text-sm font-extrabold text-ink shadow-lg shadow-lime/20 hover:text-white">
+            <span>Get Started Now</span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 bg-[#060D13] py-10 text-slate-400">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 text-xs sm:flex-row sm:px-8">
+      <p class="font-mono text-slate-500">© 2026 HealthFlow Inc. All rights reserved.</p>
+      <div class="flex gap-6">
+        <a href="#" class="transition hover:text-white">Privacy Policy</a>
+        <a href="#" class="transition hover:text-white">Terms of Service</a>
+        <a href="#" class="transition hover:text-white">System Status</a>
+      </div>
+    </div>
+  </footer>
+
+</main>
+
+<style>
+  /* Button Slide-Fill Animations */
+  .btn-slide-left,
+  .btn-slide-right,
+  .btn-slide-diagonal {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.35s ease, border-color 0.35s ease, transform 0.2s ease;
+  }
+  .btn-slide-left span,
+  .btn-slide-right span,
+  .btn-slide-diagonal span {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Slide From Left to Right */
+  .btn-slide-left::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #12b8a6;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: 1;
+  }
+  .btn-slide-left:hover::before {
+    transform: scaleX(1);
+  }
+
+  /* Slide From Right to Left */
+  .btn-slide-right::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #12b8a6;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: 1;
+  }
+  .btn-slide-right:hover::before {
+    transform: scaleX(1);
+  }
+
+  /* Diagonal Corner Fill */
+  .btn-slide-diagonal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #12b8a6;
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    z-index: 1;
+  }
+  .btn-slide-diagonal:hover::before {
+    transform: scaleY(1);
+  }
+
+  /* Telemetry Box Glow Behavior: COMPLETELY OFF by default, triggers only on hover */
+  .glow-telemetry {
+    box-shadow: none;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .glow-telemetry:hover {
+    box-shadow: 0 0 55px 0px rgba(18, 184, 166, 0.45), inset 0 0 20px rgba(18, 184, 166, 0.12);
+    border-color: rgba(18, 184, 166, 0.6) !important;
+  }
+
+  /* Neon Live Badge Pulse */
+  .glow-live-badge {
+    box-shadow: 0 0 15px rgba(217, 255, 93, 0.8);
+    animation: liveBadgeGlow 2.5s infinite alternate ease-in-out;
+  }
+  @keyframes liveBadgeGlow {
+    0% { box-shadow: 0 0 10px rgba(217, 255, 93, 0.5); }
+    100% { box-shadow: 0 0 22px rgba(217, 255, 93, 0.95); }
+  }
+</style>
+{% endblock %}
