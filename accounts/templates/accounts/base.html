@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}HealthFlow · Smart Health Commerce{% endblock %}</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Manrope", "sans-serif"],
+            mono: ["DM Mono", "monospace"],
+          },
+          colors: {
+            ink: "#0B1620",
+            paper: "#F7F7F4",
+            teal: "#12B8A6",
+            lime: "#D9FF5D",
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: "Manrope", sans-serif;
+      background-color: #F7F7F4;
+    }
+
+    .grid-pattern {
+      background-image:
+        linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+
+    .form-input {
+      width: 100%;
+      border: 1px solid #CBD5E1;
+      background: white;
+      padding: .9rem 1rem;
+      font-size: .875rem;
+      outline: none;
+      transition: all .2s ease;
+    }
+
+    .form-input:focus {
+      border-color: #12B8A6;
+      box-shadow: 0 0 0 4px rgba(18, 184, 166, .12);
+    }
+
+    /* Glowing Heartbeat & Diaphragm Pulse */
+    @keyframes ecgDash {
+      0% {
+        stroke-dasharray: 4 90;
+        stroke-dashoffset: 94;
+        opacity: 0.2;
+      }
+      30% {
+        opacity: 1;
+      }
+      62% {
+        stroke-dasharray: 70 24;
+        stroke-dashoffset: 0;
+        opacity: 1;
+      }
+      100% {
+        stroke-dasharray: 4 90;
+        stroke-dashoffset: -94;
+        opacity: 0.25;
+      }
+    }
+
+    .animate-ecg {
+      stroke-dasharray: 70 24;
+      animation: ecgDash 2.6s ease-in-out infinite;
+      filter: drop-shadow(0 0 4px #D9FF5D);
+    }
+
+    .glow-diaphragm {
+      filter: drop-shadow(0 0 5px #D9FF5D);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .animate-ecg {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-paper text-ink">
+
+  <!-- Sticky Backdrop Blur Header -->
+  <nav class="sticky top-0 z-50 border-b border-slate-800 bg-ink/95 px-5 py-3.5 backdrop-blur-md sm:px-8">
+    <div class="mx-auto flex max-w-7xl items-center justify-between">
+      
+      <!-- Animated HealthFlow Branding -->
+      <a href="{% url 'home' %}" class="group inline-flex items-center gap-3.5 focus:outline-none" aria-label="HealthFlow Home">
+        
+        <!-- Stethoscope Heart SVG Container (Top-right dot removed) -->
+        <div class="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-lg shadow-black/20 transition-transform duration-300 group-hover:scale-105">
+          <svg viewBox="0 0 64 64" class="h-12 w-12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+
+            <!-- Soft inner glow -->
+            <circle cx="32" cy="32" r="24" fill="#12B8A6" opacity="0.05"/>
+
+            <!-- Stethoscope ear tips -->
+            <circle cx="20" cy="11" r="3.6" fill="#12B8A6"/>
+            <circle cx="44" cy="11" r="3.6" fill="#12B8A6"/>
+
+            <!-- Stethoscope tubing forming a heart -->
+            <path
+              d="M20 15
+                 C13 13, 9 19, 11 26
+                 C13 33, 22 39, 32 47
+                 C42 39, 51 33, 53 26
+                 C55 19, 51 13, 44 15"
+              stroke="#12B8A6"
+              stroke-width="3.3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+
+            <!-- Cable from heart point to chestpiece -->
+            <path
+              d="M32 47
+                 V51
+                 C32 57, 23 58, 19 54
+                 C16 51, 16 47, 17 43"
+              stroke="#12B8A6"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+
+            <!-- Chestpiece & Glowing Diaphragm Dot -->
+            <circle cx="17" cy="39" r="5" fill="#0B1620" stroke="#12B8A6" stroke-width="2.6"/>
+            <circle cx="17" cy="39" r="1.6" fill="#D9FF5D" class="glow-diaphragm"/>
+
+            <!-- Glowing Heartbeat Line -->
+            <path
+              d="M16 29
+                 H23
+                 L26 24
+                 L29 34
+                 L33 21
+                 L36 30
+                 H46"
+              stroke="#D9FF5D"
+              stroke-width="2.3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="animate-ecg"
+            />
+          </svg>
+        </div>
+
+        <!-- Typography -->
+        <div class="leading-none">
+          <p class="font-mono text-[9px] uppercase tracking-[0.22em] text-lime">
+            Smart health commerce
+          </p>
+          <p class="mt-1 text-base font-extrabold tracking-tight text-white">
+            Health<span class="text-teal">Flow</span>
+          </p>
+        </div>
+      </a>
+
+      <!-- Universal Navigation Controls -->
+      <div class="flex items-center gap-3">
+        {% if user.is_authenticated %}
+          <a href="#" onclick="alert('Cart view coming soon!')" class="rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-teal hover:text-white">
+            Cart
+          </a>
+          <a href="{% url 'logout' %}" class="rounded-xl bg-rose-600/20 border border-rose-500/30 px-4 py-2 text-xs font-bold text-rose-300 transition hover:bg-rose-600 hover:text-white">
+            Sign out
+          </a>
+        {% else %}
+          <a href="{% url 'login' %}" class="rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-lime hover:text-lime">
+            Sign in
+          </a>
+          <a href="{% url 'register' %}" class="rounded-xl bg-lime px-5 py-2 text-xs font-extrabold text-ink transition hover:bg-teal hover:text-white">
+            Register
+          </a>
+        {% endif %}
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- Page Content -->
+  {% block content %}{% endblock %}
+
+</body>
+</html>
