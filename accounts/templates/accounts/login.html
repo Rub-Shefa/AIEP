@@ -1,0 +1,98 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Sign In · HealthFlow{% endblock %}
+
+{% block content %}
+<main class="grid min-h-screen lg:grid-cols-[1.08fr_0.92fr] bg-paper text-ink">
+  <!-- Brand / Operational panel -->
+  <section class="relative hidden overflow-hidden bg-ink p-12 text-white lg:flex lg:flex-col lg:justify-between">
+    <!-- Background Grid Pattern & Ambient Blue/Green Glow -->
+    <div class="absolute inset-0 grid-pattern opacity-25"></div>
+    <div class="pointer-events-none absolute -left-20 -top-20 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-teal/15 via-cyan-500/15 to-blue-600/15 blur-[140px]"></div>
+    <div class="pointer-events-none absolute bottom-10 right-10 h-[350px] w-[350px] rounded-full bg-teal/10 blur-[120px]"></div>
+
+    <!-- Top Badge & Header -->
+    <div class="relative z-10 max-w-lg space-y-6">
+      <div class="inline-flex items-center gap-2.5 rounded-full border border-teal/40 bg-teal/10 px-4 py-1.5 text-xs font-semibold text-lime shadow-[0_0_15px_rgba(18,184,166,0.15)]">
+        <span class="h-2 w-2 rounded-full bg-lime animate-pulse"></span>
+        Operations Grid Active
+      </div>
+
+      <h1 class="text-4xl font-extrabold leading-[1.1] tracking-tight xl:text-5xl">
+        Care should never wait for a <span class="bg-gradient-to-r from-teal via-emerald-400 to-lime bg-clip-text text-transparent">delivery.</span>
+      </h1>
+      
+      <p class="max-w-md text-base leading-relaxed text-slate-300">
+        A single workspace for real-time healthcare supply operations, cold-chain telemetry, and reliable dispatch fulfillment.
+      </p>
+
+      <!-- Stat Cards -->
+      <div class="grid max-w-md grid-cols-3 gap-3 pt-4">
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 backdrop-blur-xl transition hover:border-teal/40">
+          <p class="font-mono text-xl font-bold text-lime drop-shadow-[0_0_8px_rgba(217,255,93,0.3)]">24/7</p>
+          <p class="mt-1 font-mono text-[10px] uppercase text-slate-400">Visibility</p>
+        </div>
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 backdrop-blur-xl transition hover:border-teal/40">
+          <p class="font-mono text-xl font-bold text-teal drop-shadow-[0_0_8px_rgba(18,184,166,0.3)]">Live</p>
+          <p class="mt-1 font-mono text-[10px] uppercase text-slate-400">Inventory</p>
+        </div>
+        <div class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 backdrop-blur-xl transition hover:border-teal/40">
+          <p class="font-mono text-xl font-bold text-white">Secure</p>
+          <p class="mt-1 font-mono text-[10px] uppercase text-slate-400">Access</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operational Footer Note -->
+    <div class="relative z-10 flex items-center justify-between border-t border-slate-800/80 pt-6 font-mono text-[11px] text-slate-500">
+      <span>HEALTHFLOW PLATFORM · V1.0</span>
+      <span class="text-teal">● GRID OPERATIONAL</span>
+    </div>
+  </section>
+
+  <!-- Sign-in panel -->
+  <section class="flex items-center justify-center px-6 py-12 sm:px-12 lg:px-16 bg-white">
+    <div class="w-full max-w-md space-y-8">
+      <div>
+        <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">ACCOUNT ACCESS</p>
+        <h2 class="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Welcome back.</h2>
+        <p class="mt-2 text-sm text-slate-500">Sign in to manage your healthcare logistics pipeline.</p>
+      </div>
+
+      {% if messages %}
+        <div class="space-y-3">
+          {% for message in messages %}
+            <div role="alert" class="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50/90 p-4 text-sm font-medium text-rose-800 shadow-sm">
+              <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rose-200 text-xs font-bold text-rose-900">!</span>
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" class="space-y-5">
+        {% csrf_token %}
+        <div>
+          <label for="username" class="mb-2 block font-mono text-xs font-semibold uppercase tracking-wider text-slate-600">Username</label>
+          <input id="username" type="text" name="username" required autocomplete="username" placeholder="Enter your username" class="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3.5 text-sm text-ink transition focus:border-teal focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal/10">
+        </div>
+
+        <div>
+          <label for="password" class="mb-2 block font-mono text-xs font-semibold uppercase tracking-wider text-slate-600">Password</label>
+          <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="Enter your password" class="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3.5 text-sm text-ink transition focus:border-teal focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal/10">
+        </div>
+
+        
+        <button type="submit" class="btn-slide-left w-full rounded-xl bg-lime py-4 text-sm font-extrabold text-ink shadow-lg shadow-lime/20 transition-all duration-300 hover:bg-teal hover:text-white hover:shadow-xl hover:shadow-teal/40">
+  <span>Sign In Securely</span>
+</button>
+      </form>
+
+      <div class="border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
+        New to the platform?
+        <a href="{% url 'register' %}" class="ml-1 font-extrabold text-teal hover:underline hover:underline-offset-4">Create an account</a>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}
