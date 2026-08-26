@@ -18,7 +18,7 @@
         <div class="space-y-6 lg:col-span-7">
           <div class="inline-flex items-center gap-2.5 rounded-full border border-teal/40 bg-teal/10 px-4 py-1.5 text-xs font-semibold text-lime shadow-[0_0_15px_rgba(18,184,166,0.15)]">
             <span class="h-2 w-2 rounded-full bg-lime animate-pulse"></span>
-            Real-Time Medical Supply Chain
+            Next-Gen Medical Procurement
           </div>
 
           <h1 class="text-4xl font-extrabold tracking-tight sm:text-6xl sm:leading-[1.1]">
@@ -37,10 +37,10 @@
               </a>
             {% else %}
               <a href="{% url 'register' %}" class="btn-slide-left rounded-xl bg-lime px-7 py-3.5 text-sm font-extrabold text-ink shadow-lg shadow-lime/20 hover:text-white hover:shadow-teal/30">
-                <span>Create Account</span>
+                <span>Explore Supplies catalog</span>
               </a>
               <a href="{% url 'login' %}" class="btn-slide-right rounded-xl border border-slate-700 bg-slate-900/80 px-7 py-3.5 text-sm font-semibold text-slate-200 hover:border-teal hover:text-white">
-                <span>Sign In</span>
+                <span>Sign In to Workspace</span>
               </a>
             {% endif %}
           </div>
@@ -119,6 +119,365 @@
     </div>
   </section>
 
+ <!-- Browse Supply Categories Section -->
+<section class="max-w-7xl mx-auto px-6 py-10 sm:px-12">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-extrabold text-slate-900">Browse Supply Categories</h2>
+      <p class="text-xs text-slate-500 mt-1">Select a category to view instant stock availability</p>
+    </div>
+  </div>
+
+  <!-- Categories Grid -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4" id="category-grid">
+    {% for cat in categories %}
+    <a href="#" class="category-card {% if forloop.counter > 6 %}hidden{% endif %} group flex flex-col items-center justify-center p-4 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all duration-300 hover:border-teal-500 hover:shadow-md hover:-translate-y-1">
+      
+      {% if 'Cold-Chain' in cat.name or 'Vaccine' in cat.name %}
+        <!-- Cold-Chain Vaccines (Teal/Syringe) -->
+        <div class="h-16 w-16 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 mb-3 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+        </div>
+
+      {% elif 'Diagnostics' in cat.name %}
+        <!-- Diagnostics & Testing (Emerald/Clipboard Check) -->
+        <div class="h-16 w-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mb-3 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </div>
+
+      {% elif 'Emergency' in cat.name %}
+        <!-- Emergency Care (Red/Lightning-First Aid) -->
+        <div class="h-16 w-16 rounded-full bg-red-50 flex items-center justify-center text-red-600 mb-3 group-hover:bg-red-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        </div>
+
+      {% elif 'Surgical' in cat.name %}
+        <!-- Surgical Gear (Purple/Scissors & Cross) -->
+        <div class="h-16 w-16 rounded-full bg-purple-50 flex items-center justify-center text-purple-600 mb-3 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 0L4 4m5.121 5.121L4 14.121m8.879-2.121L14.121 9.121"></path></svg>
+        </div>
+
+      {% elif 'Telemetry' in cat.name %}
+        <!-- Telemetry & Devices (Amber/Chip Monitor) -->
+        <div class="h-16 w-16 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 mb-3 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m14-6h2m-2 6h2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+        </div>
+
+      {% elif 'Medical Devices' in cat.name %}
+        <!-- Medical Devices (Cyan/Stethoscope) -->
+        <div class="h-16 w-16 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-600 mb-3 group-hover:bg-cyan-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 5a1 1 0 00-1 1v3a1 1 0 01-1 1 1 1 0 00-1 1v1a7 7 0 0014 0v-1a1 1 0 00-1-1 1 1 0 01-1-1V6a1 1 0 00-1-1M9 5h6m-7 13a4 4 0 108 0 4 4 0 00-8 0z"></path></svg>
+        </div>
+
+      {% elif 'Vitamins' in cat.name %}
+        <!-- Vitamins & Minerals (Orange/Sparkle) -->
+        <div class="h-16 w-16 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 mb-3 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+        </div>
+
+      {% elif 'Supplements' in cat.name %}
+        <!-- Supplements (Yellow/Leaf) -->
+        <div class="h-16 w-16 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600 mb-3 group-hover:bg-yellow-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+        </div>
+
+      {% elif 'Antibiotics' in cat.name %}
+        <!-- Antibiotics (Indigo/Shield) -->
+        <div class="h-16 w-16 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+
+      {% elif 'Pain' in cat.name %}
+        <!-- Pain Relief (Rose/Heart) -->
+        <div class="h-16 w-16 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-3 group-hover:bg-rose-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+        </div>
+
+      {% elif 'Pharmaceuticals' in cat.name %}
+        <!-- Pharmaceuticals (Violet/Mortar Rx) -->
+        <div class="h-16 w-16 rounded-full bg-violet-50 flex items-center justify-center text-violet-600 mb-3 group-hover:bg-violet-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+        </div>
+
+      {% else %}
+        <!-- Medicines / Default (Sky/Pills) -->
+        <div class="h-16 w-16 rounded-full bg-sky-50 flex items-center justify-center text-sky-600 mb-3 group-hover:bg-sky-600 group-hover:text-white transition-colors">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 017-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+        </div>
+      {% endif %}
+
+      <span class="text-xs font-bold text-slate-800 text-center">{{ cat.name }}</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Show More / Show Less Toggle Button -->
+  {% if categories|length > 6 %}
+  <div class="mt-8 text-center">
+    <button id="toggle-categories-btn" onclick="toggleCategories()" class="inline-flex items-center justify-center px-6 py-2.5 border border-slate-300 shadow-sm text-xs font-bold rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:border-teal-500 hover:text-teal-600 transition-all">
+      <span id="btn-text">Show More Categories</span>
+      <svg id="btn-icon" class="ml-2 w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+    </button>
+  </div>
+  {% endif %}
+</section>
+
+<!-- Toggle Script -->
+<script>
+  function toggleCategories() {
+    const hiddenCards = document.querySelectorAll('.category-card');
+    const btnText = document.getElementById('btn-text');
+    const btnIcon = document.getElementById('btn-icon');
+    let isExpanded = false;
+
+    hiddenCards.forEach((card, index) => {
+      if (index >= 6) {
+        if (card.classList.contains('hidden')) {
+          card.classList.remove('hidden');
+          isExpanded = true;
+        } else {
+          card.classList.add('hidden');
+        }
+      }
+    });
+
+    if (isExpanded) {
+      btnText.innerText = "Show Less";
+      btnIcon.classList.add('rotate-180');
+    } else {
+      btnText.innerText = "Show More Categories";
+      btnIcon.classList.remove('rotate-180');
+    }
+  }
+</script>
+
+<!-- Featured Operational Supplies Grid -->
+<section class="max-w-7xl mx-auto px-6 py-8 sm:px-12">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-extrabold text-slate-900">Featured Operational Supplies</h2>
+      <p class="text-xs text-slate-500 mt-1">Real-time inventory levels from verified distributors</p>
+    </div>
+  </div>
+
+  <!-- Products Grid (4 columns on desktop) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6" id="product-grid">
+    {% for product in products %}
+      <div class="product-card {% if forloop.counter > 8 %}hidden{% endif %} rounded-2xl bg-white border border-slate-200 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition duration-300 hover:-translate-y-0.5">
+        <div>
+          <!-- Card Media Box -->
+          <div class="h-44 w-full rounded-xl bg-slate-50 flex items-center justify-center relative overflow-hidden mb-3 border border-slate-100">
+            {% if product.is_regulated %}
+              <span class="absolute top-3 left-3 rounded-full bg-lime-400 border border-lime-500/30 px-3 py-1 font-mono text-[10px] font-extrabold text-slate-900 shadow-sm z-10">2-8°C Temp Lock</span>
+            {% else %}
+              <span class="absolute top-3 left-3 rounded-full bg-cyan-100 border border-cyan-200 px-3 py-1 font-mono text-[10px] font-extrabold text-cyan-800 z-10">Priority Express</span>
+            {% endif %}
+
+            {% if product.image_url %}
+              <img src="{{ product.image_url }}" alt="{{ product.name }}" class="h-full w-full object-cover">
+            {% else %}
+              <!-- Fallback Wireframe Box Icon -->
+              <svg class="w-14 h-14 text-slate-300 stroke-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+              </svg>
+            {% endif %}
+          </div>
+
+          <span class="font-mono text-[10px] uppercase font-bold text-teal-600 tracking-wider">{{ product.category.name }}</span>
+          <h3 class="text-sm font-extrabold text-slate-900 mt-1 leading-snug">{{ product.name }}</h3>
+        </div>
+
+        <div class="mt-6 pt-3 border-t border-slate-100 flex items-center justify-between">
+          <div>
+            {% if product.stock > 5 %}
+              <span class="text-xs font-bold text-slate-800">In Stock</span>
+            {% else %}
+              <span class="text-xs font-bold text-amber-600">Low Stock</span>
+            {% endif %}
+          </div>
+          <button class="rounded-lg bg-slate-900 px-4 py-2 text-xs font-extrabold text-white transition hover:bg-teal-600">Order</button>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-xs text-slate-500 col-span-full">No products found in the catalog.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Toggle Button for Products -->
+  {% if products|length > 8 %}
+  <div class="mt-10 text-center">
+    <button id="toggle-products-btn" onclick="toggleProducts()" class="inline-flex items-center justify-center px-6 py-2.5 border border-slate-300 shadow-sm text-xs font-bold rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:border-teal-500 hover:text-teal-600 transition-all">
+      <span id="prod-btn-text">Show More Products</span>
+      <svg id="prod-btn-icon" class="ml-2 w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+    </button>
+  </div>
+  {% endif %}
+</section>
+
+<!-- Toggle Script for Products -->
+<script>
+  function toggleProducts() {
+    const hiddenProducts = document.querySelectorAll('.product-card');
+    const btnText = document.getElementById('prod-btn-text');
+    const btnIcon = document.getElementById('prod-btn-icon');
+    let isExpanded = false;
+
+    hiddenProducts.forEach((card, index) => {
+      if (index >= 8) {
+        if (card.classList.contains('hidden')) {
+          card.classList.remove('hidden');
+          isExpanded = true;
+        } else {
+          card.classList.add('hidden');
+        }
+      }
+    });
+
+    if (isExpanded) {
+      btnText.innerText = "Show Less";
+      btnIcon.classList.add('rotate-180');
+    } else {
+      btnText.innerText = "Show More Products";
+      btnIcon.classList.remove('rotate-180');
+    }
+  }
+</script>
+
+  <!-- Verified Healthcare Providers & Consultations -->
+<section class="max-w-7xl mx-auto px-6 py-8 sm:px-12 border-t border-slate-200">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-extrabold text-slate-900">Verified Healthcare Providers</h2>
+      <p class="text-xs text-slate-500 mt-1">Book direct consultations and expert medical support</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6" id="provider-grid">
+    {% for provider in providers %}
+      <div class="provider-card {% if forloop.counter > 4 %}hidden{% endif %} rounded-2xl bg-white border border-slate-200 p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition duration-300 hover:-translate-y-0.5">
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <!-- Dynamic Avatar Generator using real doctor name -->
+            <img src="https://ui-avatars.com/api/?name={{ provider.user.get_full_name|default:provider.user.username|urlencode }}&background=0D9488&color=fff&bold=true" 
+                 alt="Dr. {{ provider.user.get_full_name }}" 
+                 class="h-12 w-12 rounded-full object-cover border border-slate-200 shadow-sm shrink-0">
+            
+            <div>
+              <span class="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-800 uppercase tracking-wider">
+                {{ provider.credential_status|default:"Verified" }}
+              </span>
+              <h3 class="text-sm font-bold text-slate-900 mt-0.5">
+                Dr. {{ provider.user.get_full_name|default:provider.user.username }}
+              </h3>
+            </div>
+          </div>
+          
+          <p class="text-xs text-teal-600 font-semibold">{{ provider.specialty }}</p>
+          <p class="text-[11px] text-slate-500 mt-1">{{ provider.degrees }} • {{ provider.experience_years }} yrs exp</p>
+          <p class="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">{{ provider.bio }}</p>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+          <div>
+            <span class="font-mono text-xs font-bold text-slate-900">${{ provider.consultation_fee }}</span>
+            <span class="text-[10px] text-slate-400"> / session</span>
+          </div>
+          <button class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-900">Book Visit</button>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-xs text-slate-500 col-span-full">No active providers registered yet.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Toggle Button for Doctors -->
+  {% if providers|length > 4 %}
+  <div class="mt-8 text-center">
+    <button id="toggle-providers-btn" onclick="toggleProviders()" class="inline-flex items-center justify-center px-6 py-2.5 border border-slate-300 shadow-sm text-xs font-bold rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:border-teal-500 hover:text-teal-600 transition-all">
+      <span id="doc-btn-text">Show More Doctors</span>
+      <svg id="doc-btn-icon" class="ml-2 w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+    </button>
+  </div>
+  {% endif %}
+</section>
+
+<!-- Toggle Script for Providers -->
+<script>
+  function toggleProviders() {
+    const hiddenProviders = document.querySelectorAll('.provider-card');
+    const btnText = document.getElementById('doc-btn-text');
+    const btnIcon = document.getElementById('doc-btn-icon');
+    let isExpanded = false;
+
+    hiddenProviders.forEach((card, index) => {
+      if (index >= 4) {
+        if (card.classList.contains('hidden')) {
+          card.classList.remove('hidden');
+          isExpanded = true;
+        } else {
+          card.classList.add('hidden');
+        }
+      }
+    });
+
+    if (isExpanded) {
+      btnText.innerText = "Show Less";
+      btnIcon.classList.add('rotate-180');
+    } else {
+      btnText.innerText = "Show More Doctors";
+      btnIcon.classList.remove('rotate-180');
+    }
+  }
+</script>
+
+<!-- Toggle Script for Providers -->
+<script>
+  function toggleProviders() {
+    const hiddenProviders = document.querySelectorAll('.provider-card');
+    const btnText = document.getElementById('doc-btn-text');
+    const btnIcon = document.getElementById('doc-btn-icon');
+    let isExpanded = false;
+
+    hiddenProviders.forEach((card, index) => {
+      if (index >= 4) {
+        if (card.classList.contains('hidden')) {
+          card.classList.remove('hidden');
+          isExpanded = true;
+        } else {
+          card.classList.add('hidden');
+        }
+      }
+    });
+
+    if (isExpanded) {
+      btnText.innerText = "Show Less";
+      btnIcon.classList.add('rotate-180');
+    } else {
+      btnText.innerText = "Show More Doctors";
+      btnIcon.classList.remove('rotate-180');
+    }
+  }
+</script>
+
+  <!-- Floating AI Assistant Button (Fixed Bottom-Right, like Arogga & Daraz chat widgets) -->
+  <div class="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+    <!-- Optional Speech Bubble Prompt -->
+    <div class="hidden sm:flex items-center gap-2 rounded-full border border-teal/30 bg-ink/90 backdrop-blur-md px-4 py-2 text-xs font-semibold text-white shadow-xl">
+      <span class="h-2 w-2 rounded-full bg-lime animate-pulse"></span>
+      <span>Ask HealthFlow AI</span>
+    </div>
+
+    <!-- Floating Trigger Button -->
+    <button type="button" class="group relative flex h-14 w-14 items-center justify-center rounded-full bg-teal text-ink shadow-lg shadow-teal/30 transition-all duration-300 hover:scale-105 hover:bg-lime hover:shadow-lime/40 focus:outline-none">
+      <span class="absolute -top-1 -right-1 flex h-4 w-4">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-4 w-4 bg-lime"></span>
+      </span>
+      <svg class="h-7 w-7 text-ink transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+      </svg>
+    </button>
+  </div>
   <!-- TRUST METRICS BAR -->
   <section class="border-y border-slate-200 bg-white py-10">
     <div class="mx-auto max-w-7xl px-5 sm:px-8">

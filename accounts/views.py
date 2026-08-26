@@ -4,9 +4,19 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from .forms import CustomUserCreationForm
+from accounts.models import ProviderProfile
+from catalog.models import Category, Product
 
 def home(request):
-    return render(request, 'accounts/home.html')
+    categories = Category.objects.all()
+    products = Product.objects.all()
+    providers = ProviderProfile.objects.all()
+    context = {
+        'categories': categories,
+        'products': products,
+        'providers': providers,
+    }
+    return render(request, 'accounts/home.html', context)
 
 def is_admin(user):
     return user.is_staff or user.is_superuser

@@ -18,16 +18,6 @@ class SellerProfile(models.Model):
     def __str__(self):
         return self.store_name
 
-class ProviderProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='provider_profile')
-    specialty = models.CharField(max_length=100)
-    budget_tier = models.CharField(max_length=50, blank=True)
-    consultation_type = models.CharField(max_length=50, blank=True)
-    credential_status = models.CharField(max_length=50, default='Pending')
-
-    def __str__(self):
-        return f"Provider: {self.user.username} ({self.specialty})"
-
 class CourierProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='courier_profile')
     vehicle_type = models.CharField(max_length=50)
@@ -36,3 +26,17 @@ class CourierProfile(models.Model):
 
     def __str__(self):
         return f"Courier: {self.user.username}"
+
+class ProviderProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='provider_profile')
+    specialty = models.CharField(max_length=100)
+    degrees = models.CharField(max_length=255, blank=True, default="MBBS, MD")
+    consultation_fee = models.DecimalField(max_digits=8, decimal_places=2, default=50.00)
+    experience_years = models.IntegerField(default=5)
+    bio = models.TextField(blank=True)
+    budget_tier = models.CharField(max_length=50, blank=True)
+    consultation_type = models.CharField(max_length=50, default='Online & In-Person')
+    credential_status = models.CharField(max_length=50, default='Verified')
+
+    def __str__(self):
+        return f"Dr. {self.user.get_full_name() or self.user.username} ({self.specialty})"
