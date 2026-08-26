@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 p-8">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-slate-900">Customer Portal</h1>
+            {% if user.is_staff or user.is_superuser %}
+                <a href="{% url 'admin_dashboard' %}" class="text-xs bg-indigo-50 text-indigo-600 px-3 py-2 rounded-lg font-semibold hover:bg-indigo-100">← Back to Admin Hub</a>
+            {% else %}
+                <a href="{% url 'logout' %}" class="text-xs bg-slate-100 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-200">Logout</a>
+            {% endif %}
+        </div>
+        <p class="text-slate-600">Welcome, <strong>{{ user.username }}</strong>! Your groupmate will integrate the active store and catalog interfaces here.</p>
+    </div>
+</body>
+</html>
