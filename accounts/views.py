@@ -24,6 +24,12 @@ def is_admin(user):
 def redirect_based_on_role(user):
     if user.is_staff or user.is_superuser:
         return redirect('admin_dashboard')
+    elif hasattr(user, 'sellerprofile'):
+        return redirect('seller_dashboard')
+    elif hasattr(user, 'providerprofile'):
+        return redirect('provider_dashboard')
+    elif hasattr(user, 'courierprofile'):
+        return redirect('courier_dashboard')
     return redirect('customer_dashboard')
 
 def login_view(request):
@@ -57,12 +63,20 @@ def register_view(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, "Account created successfully! You can now log in.")
-            return redirect('login')
+            login(request, user)
+            messages.success(request, "Account created successfully!")
+            return redirect_based_on_role(user)
         else:
+            # Clean up field names for user messages
+            field_name_map = {
+                'password1': 'Password',
+                'password2': 'Password',
+                'phone_number': 'Phone Number',
+            }
             for field, errors in form.errors.items():
+                display_name = field_name_map.get(field, field.replace('_', ' ').capitalize())
                 for error in errors:
-                    messages.error(request, f"{field.capitalize()}: {error}")
+                    messages.error(request, f"{display_name}: {error}")
     else:
         form = CustomUserCreationForm()
 
@@ -73,6 +87,7 @@ def logout_view(request):
     messages.info(request, "You have been logged out.")
     return redirect('login')
 
+# --- Dashboard Handlers ---
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
@@ -81,3 +96,15 @@ def admin_dashboard_view(request):
 @login_required
 def customer_dashboard_view(request):
     return render(request, 'accounts/customer_dashboard.html')
+
+@login_required
+def seller_dashboard_view(request):
+    return render(request, 'accounts/seller_dashboard.html')
+
+@login_required
+def provider_dashboard_view(request):
+    return render(request, 'accounts/provider_dashboard.html')
+
+@login_required
+def courier_dashboard_view(request):
+    return render(request, 'accounts/courier_dashboard.html')
