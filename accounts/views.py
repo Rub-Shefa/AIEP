@@ -74,7 +74,6 @@ def register_view(request):
             messages.success(request, "Account created successfully!")
             return redirect_based_on_role(user)
         else:
-            # Clean up field names for user messages
             field_name_map = {
                 'password1': 'Password',
                 'password2': 'Password',
@@ -95,6 +94,7 @@ def logout_view(request):
     return redirect('login')
 
 # --- Dashboard Handlers ---
+
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
@@ -103,7 +103,6 @@ def admin_dashboard_view(request):
     now = timezone.now()
     week_ago = now - timedelta(days=7)
 
-    # --- Top-line stats ---
     revenue_agg = Order.objects.filter(status='Completed').aggregate(total=Sum('total'))
     total_revenue = revenue_agg['total'] or 0
 
@@ -137,7 +136,6 @@ def admin_dashboard_view(request):
         status='Scheduled', appointment_date__gte=now
     ).count()
 
-    # --- Recent activity ---
     recent_orders = (
         Order.objects.select_related('customer__user')
         .order_by('-created_at')[:8]
@@ -145,14 +143,12 @@ def admin_dashboard_view(request):
 
     recent_users = User.objects.order_by('-date_joined')[:8]
 
-    # --- Top products by quantity sold ---
     top_products = (
         OrderItem.objects.values('product__name', 'product__stock')
         .annotate(units_sold=Sum('quantity'), revenue=Sum('line_subtotal'))
         .order_by('-units_sold')[:6]
     )
 
-    # --- User management table (with optional role filter) ---
     role_filter = request.GET.get('role', '')
     users_qs = User.objects.select_related(
         'customer_profile', 'seller_profile', 'provider_profile', 'courier_profile'
@@ -246,7 +242,6 @@ def seller_dashboard_view(request):
         messages.error(request, "You need a seller profile to access the seller dashboard.")
         return redirect_based_on_role(request.user)
 
-    # --- Product catalog ---
     products = (
         Product.objects.filter(seller=seller_profile)
         .select_related('category')
@@ -257,7 +252,6 @@ def seller_dashboard_view(request):
     low_stock_count = low_stock_products.count()
     out_of_stock_count = products.filter(stock=0).count()
 
-    # --- Revenue & order items belonging to this seller ---
     seller_order_items = (
         OrderItem.objects.filter(product__seller=seller_profile)
         .select_related('order', 'product')
@@ -291,7 +285,6 @@ def seller_dashboard_view(request):
             order.status in ('Pending', 'Processing') and not order.has_job_posting
         )
 
-    # --- Delivery jobs posted by this seller ---
     delivery_jobs = (
         DeliveryJobPosting.objects.filter(seller=seller_profile)
         .select_related('order')
@@ -301,7 +294,6 @@ def seller_dashboard_view(request):
     open_jobs = [job for job in delivery_jobs if job.is_active and not hasattr(job, 'delivery')]
     assigned_jobs = [job for job in delivery_jobs if hasattr(job, 'delivery')]
 
-    # --- Top sellers by units moved ---
     top_products = (
         seller_order_items.values('product__name')
         .annotate(units_sold=Sum('quantity'), revenue=Sum('line_subtotal'))
@@ -377,6 +369,33 @@ def provider_dashboard_view(request):
         'total_earnings': total_earnings,
     }
     return render(request, 'accounts/provider_dashboard.html', context)
+
+@login_required
+def provider_profile_view(request):
+    provider_profile, _ = ProviderProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        if full_name:
+            names = full_name.split(' ', 1)
+            request.user.first_name = names[0]
+            request.user.last_name = names[1] if len(names) > 1 else ''
+            request.user.save()
+
+        provider_profile.specialization = request.POST.get('specialization', '')
+        consultation_fee = request.POST.get('consultation_fee')
+        if consultation_fee:
+            provider_profile.consultation_fee = consultation_fee
+        provider_profile.bio = request.POST.get('bio', '')
+        provider_profile.save()
+
+        messages.success(request, "Profile updated successfully.")
+        return redirect('provider_profile')
+
+    context = {
+        'provider': provider_profile,
+    }
+    return render(request, 'accounts/provider_profile.html', context)
 
 @login_required
 def courier_dashboard_view(request):
