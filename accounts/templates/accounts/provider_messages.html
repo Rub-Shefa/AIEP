@@ -1,0 +1,95 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Messages - AIEP Health{% endblock %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="flex h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between p-4 shrink-0">
+    <div>
+      <div class="flex items-center gap-3 px-2 py-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/30">
+          +
+        </div>
+        <div>
+          <h2 class="font-bold text-lg leading-none text-white tracking-wide">AIEP Health</h2>
+          <span class="text-xs text-cyan-400 font-medium tracking-wider uppercase">Provider Suite</span>
+        </div>
+      </div>
+
+      <nav class="space-y-1">
+        <a href="{% url 'provider_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 text-sm transition">
+          Overview
+        </a>
+        <a href="{% url 'provider_appointments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 text-sm transition">
+          Appointments
+        </a>
+        <a href="{% url 'provider_patients' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 text-sm transition">
+          Patients
+        </a>
+        <a href="{% url 'provider_messages' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 font-medium text-sm transition">
+          Messages
+        </a>
+        <a href="{% url 'provider_profile' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 text-sm transition">
+          My Profile
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- CHAT INTERFACE -->
+  <div class="flex-1 flex overflow-hidden">
+    <!-- PATIENT CONVERSATION LIST -->
+    <div class="w-1/3 border-r border-slate-800 bg-slate-900/50 p-4 overflow-y-auto">
+      <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Patient Chats</h2>
+      <div class="space-y-2">
+        {% for patient in patients %}
+          <a href="?patient_id={{ patient.id }}" class="block p-3 rounded-lg border border-slate-800 hover:bg-slate-800/60 transition {% if selected_patient.id == patient.id %}bg-cyan-500/10 border-cyan-500/30{% endif %}">
+            <p class="font-medium text-sm text-slate-200">{{ patient.user.get_full_name|default:patient.user.username }}</p>
+            <p class="text-xs text-slate-500 truncate">{{ patient.user.email }}</p>
+          </a>
+        {% empty %}
+          <p class="text-xs text-slate-500">No active patient conversations.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- CHAT MESSAGES DISPLAY -->
+    <div class="flex-1 flex flex-col justify-between bg-slate-950 p-6">
+      {% if selected_patient %}
+        <header class="pb-4 border-b border-slate-800 mb-4">
+          <h2 class="font-bold text-base text-white">{{ selected_patient.user.get_full_name|default:selected_patient.user.username }}</h2>
+          <p class="text-xs text-slate-400">Direct Message Channel</p>
+        </header>
+
+        <div class="flex-1 overflow-y-auto space-y-3 pr-2 mb-4">
+          {% for msg in chat_messages %}
+            <div class="flex flex-col {% if msg.sender == request.user %}items-end{% else %}items-start{% endif %}">
+              <div class="max-w-md p-3 rounded-xl text-xs {% if msg.sender == request.user %}bg-cyan-600 text-white rounded-br-none{% else %}bg-slate-800 text-slate-200 rounded-bl-none{% endif %}">
+                {{ msg.message }}
+              </div>
+              <span class="text-[9px] text-slate-500 mt-1">{{ msg.timestamp|date:"h:i A" }}</span>
+            </div>
+          {% empty %}
+            <div class="text-center text-xs text-slate-500 mt-12">No messages yet. Send a message below to start chatting.</div>
+          {% endfor %}
+        </div>
+
+        <form method="POST" class="flex gap-2 border-t border-slate-800 pt-4">
+          {% csrf_token %}
+          <input type="text" name="message" placeholder="Type a message..." required class="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-4 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+          <button type="submit" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition">
+            Send
+          </button>
+        </form>
+      {% else %}
+        <div class="flex items-center justify-center h-full text-slate-500 text-xs">
+          Select a patient from the list to view and send messages.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
