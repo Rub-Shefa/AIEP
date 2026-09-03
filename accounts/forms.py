@@ -92,15 +92,21 @@ class CustomUserCreationForm(UserCreationForm):
             elif role == 'seller' and hasattr(models, 'SellerProfile'):
                 models.SellerProfile.objects.get_or_create(
                     user=user, 
-                    defaults={'store_name': self.cleaned_data.get('store_name') or f"{user.username}'s Store", 'phone_number': phone}
+                    defaults={'store_name': self.cleaned_data.get('store_name') or f"{user.username}'s Store"}
                 )
             elif role == 'provider' and hasattr(models, 'ProviderProfile'):
                 models.ProviderProfile.objects.get_or_create(
                     user=user, 
-                    defaults={'specialty': self.cleaned_data.get('specialty') or 'General Practice', 'phone_number': phone}
+                    defaults={'specialty': self.cleaned_data.get('specialty') or 'General Practice'}
                 )
             elif role == 'courier' and hasattr(models, 'CourierProfile'):
-                models.CourierProfile.objects.get_or_create(user=user, defaults={'phone_number': phone})
+                models.CourierProfile.objects.get_or_create(
+                    user=user,
+                    defaults={
+                        'vehicle_type': self.cleaned_data.get('vehicle_type') or 'Motorbike',
+                        'service_zone': self.cleaned_data.get('offline_location') or '',
+                    }
+                )
 
         return user
 

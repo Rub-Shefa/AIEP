@@ -1,21 +1,205 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Customer Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-slate-50 p-8">
-    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-slate-900">Customer Portal</h1>
-            {% if user.is_staff or user.is_superuser %}
-                <a href="{% url 'admin_dashboard' %}" class="text-xs bg-indigo-50 text-indigo-600 px-3 py-2 rounded-lg font-semibold hover:bg-indigo-100">← Back to Admin Hub</a>
-            {% else %}
-                <a href="{% url 'logout' %}" class="text-xs bg-slate-100 text-slate-600 px-3 py-2 rounded-lg font-semibold hover:bg-slate-200">Logout</a>
-            {% endif %}
+{% extends "accounts/base.html" %}
+
+{% block title %}Customer Portal · HealthFlow{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+
+  {% if messages %}
+    <div class="mb-6 space-y-2">
+      {% for message in messages %}
+        <div class="rounded-xl border px-4 py-3 text-sm font-medium
+          {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700
+          {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal
+          {% elif message.tags == 'warning' %} border-amber-200 bg-amber-50 text-amber-700
+          {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}">
+          {{ message }}
         </div>
-        <p class="text-slate-600">Welcome, <strong>{{ user.username }}</strong>! Your groupmate will integrate the active store and catalog interfaces here.</p>
+      {% endfor %}
     </div>
-</body>
-</html>
+  {% endif %}
+
+  <!-- Header -->
+  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Customer Portal</p>
+      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">Welcome back, {{ user.first_name|default:user.username }}</h1>
+      <p class="mt-1 text-sm text-slate-500">Browse verified supplies and track your orders.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      {% if user.is_staff or user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">← Back to Admin Hub</a>
+      {% endif %}
+      <a href="{% url 'cart_view' %}" class="relative rounded-xl bg-ink px-5 py-2.5 text-xs font-extrabold text-white hover:bg-teal">
+        View Cart
+        {% if cart_item_count %}
+          <span class="ml-1.5 rounded-full bg-lime px-1.5 py-0.5 text-[10px] font-extrabold text-ink">{{ cart_item_count }}</span>
+        {% endif %}
+      </a>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="mb-10 flex justify-center">
+    <form method="get" class="flex w-full max-w-md items-center justify-center gap-2">
+      {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+      <input type="text" name="q" value="{{ query }}" placeholder="Search products…"
+             class="w-full rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-teal focus:outline-none">
+      <button type="submit" class="shrink-0 rounded-xl bg-ink px-4 py-2 text-xs font-bold text-white hover:bg-teal">Search</button>
+    </form>
+  </div>
+
+  <!-- Stat strip -->
+  <div class="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[11px] uppercase text-slate-400">Total Orders</p>
+      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ total_orders }}</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[11px] uppercase text-slate-400">Items in Cart</p>
+      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ cart_item_count }}</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[11px] uppercase text-slate-400">Categories</p>
+      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ categories|length }}</p>
+    </div>
+  </div>
+
+  <!-- Catalog -->
+  <section>
+    <div class="mb-5 flex items-center justify-between gap-4">
+      <h2 class="text-xl font-extrabold text-slate-900">Browse Supplies</h2>
+    </div>
+
+    <!-- Category chips -->
+    <div class="mb-6 flex flex-wrap gap-2">
+      <a href="?{% if query %}q={{ query }}{% endif %}"
+         class="rounded-full border px-4 py-1.5 text-xs font-bold transition
+           {% if not selected_category %} border-ink bg-ink text-white {% else %} border-slate-300 text-slate-600 hover:border-teal hover:text-teal {% endif %}">
+        All
+      </a>
+      {% for cat in categories %}
+        <a href="?category={{ cat.id }}{% if query %}&q={{ query }}{% endif %}"
+           class="rounded-full border px-4 py-1.5 text-xs font-bold transition
+             {% if selected_category|stringformat:'s' == cat.id|stringformat:'s' %} border-ink bg-ink text-white {% else %} border-slate-300 text-slate-600 hover:border-teal hover:text-teal {% endif %}">
+          {{ cat.name }}
+        </a>
+      {% endfor %}
+    </div>
+
+    <!-- Product grid -->
+    <div id="product-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      {% for product in products %}
+        <div class="product-card flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md {% if forloop.counter > 8 %}hidden{% endif %}">
+          <div>
+            <div class="relative mb-3 h-40 w-full overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+              {% if product.is_regulated %}
+                <span class="absolute left-3 top-3 z-10 rounded-full bg-lime-400 px-2.5 py-1 font-mono text-[9px] font-extrabold text-slate-900">2-8°C Lock</span>
+              {% endif %}
+              {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="h-full w-full object-cover">
+              {% endif %}
+            </div>
+            <p class="font-mono text-[10px] font-bold uppercase tracking-wider text-teal-600">{{ product.category.name }}</p>
+            <h3 class="mt-1 text-sm font-extrabold leading-snug text-slate-900">{{ product.name }}</h3>
+            {% if product.dosage %}<p class="mt-1 text-xs text-slate-500">{{ product.dosage }}</p>{% endif %}
+          </div>
+
+          <div class="mt-4 border-t border-slate-100 pt-3">
+            <div class="mb-3 flex items-center justify-between">
+              <span class="text-sm font-extrabold text-slate-900">${{ product.price }}</span>
+              {% if product.stock > 5 %}
+                <span class="text-xs font-bold text-emerald-600">In Stock</span>
+              {% elif product.stock > 0 %}
+                <span class="text-xs font-bold text-amber-600">Low Stock ({{ product.stock }})</span>
+              {% else %}
+                <span class="text-xs font-bold text-rose-600">Out of Stock</span>
+              {% endif %}
+            </div>
+
+            {% if product.stock > 0 %}
+              <form method="post" action="{% url 'add_to_cart' product.id %}" class="flex items-center gap-2">
+                {% csrf_token %}
+                <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}"
+                       class="w-14 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-xs focus:border-teal focus:outline-none">
+                <button type="submit" class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-teal-600">
+                  Add to Cart
+                </button>
+              </form>
+            {% else %}
+              <button disabled class="w-full cursor-not-allowed rounded-lg bg-slate-200 px-3 py-2 text-xs font-extrabold text-slate-400">
+                Unavailable
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <p class="col-span-full py-12 text-center text-sm text-slate-500">No products match your search.</p>
+      {% endfor %}
+    </div>
+
+    {% if products|length > 8 %}
+      <div class="mt-6 flex justify-center">
+        <button type="button" id="show-more-btn"
+                class="rounded-xl border border-slate-300 bg-white px-6 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">
+          Show More ({{ products|length|add:"-8" }} more)
+        </button>
+      </div>
+      <script>
+        document.getElementById('show-more-btn').addEventListener('click', function () {
+          document.querySelectorAll('#product-grid .product-card.hidden').forEach(function (card) {
+            card.classList.remove('hidden');
+          });
+          this.remove();
+        });
+      </script>
+    {% endif %}
+  </section>
+
+  <!-- Order history -->
+  <section class="mt-14">
+    <h2 class="mb-5 text-xl font-extrabold text-slate-900">Order History</h2>
+    {% if orders %}
+      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+            <tr>
+              <th class="px-5 py-3 font-bold">Order</th>
+              <th class="px-5 py-3 font-bold">Date</th>
+              <th class="px-5 py-3 font-bold">Items</th>
+              <th class="px-5 py-3 font-bold">Total</th>
+              <th class="px-5 py-3 font-bold">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for order in orders %}
+              <tr class="hover:bg-slate-50/60">
+                <td class="px-5 py-3 font-mono text-xs font-bold text-slate-900">#{{ order.id }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ order.created_at|date:"M d, Y" }}</td>
+                <td class="px-5 py-3 text-slate-600">
+                  {% for item in order.items.all %}{{ item.quantity }}× {{ item.product.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                </td>
+                <td class="px-5 py-3 font-bold text-slate-900">${{ order.total }}</td>
+                <td class="px-5 py-3">
+                  <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
+                    {% if order.status == 'Completed' %} bg-emerald-100 text-emerald-700
+                    {% elif order.status == 'Cancelled' %} bg-rose-100 text-rose-700
+                    {% elif order.status == 'Processing' %} bg-amber-100 text-amber-700
+                    {% else %} bg-slate-100 text-slate-600 {% endif %}">
+                    {{ order.status }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
+        <p class="text-sm text-slate-500">You haven't placed any orders yet.</p>
+      </div>
+    {% endif %}
+  </section>
+
+</main>
+{% endblock %}

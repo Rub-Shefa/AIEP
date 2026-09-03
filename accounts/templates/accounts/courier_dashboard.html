@@ -1,0 +1,193 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Courier Portal · HealthFlow{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+
+  {% if messages %}
+    <div class="mb-6 space-y-2">
+      {% for message in messages %}
+        <div class="rounded-xl border px-4 py-3 text-sm font-medium
+          {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700
+          {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal
+          {% elif message.tags == 'warning' %} border-amber-200 bg-amber-50 text-amber-700
+          {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Header -->
+  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Courier Portal</p>
+      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">Welcome back, {{ user.first_name|default:user.username }}</h1>
+      <p class="mt-1 text-sm text-slate-500">
+        {{ courier_profile.vehicle_type|default:"Courier" }}
+        {% if courier_profile.service_zone %} · Serving {{ courier_profile.service_zone }}{% endif %}
+      </p>
+    </div>
+
+    <form method="post" class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="toggle_availability">
+      <span class="flex items-center gap-2 text-xs font-bold text-slate-600">
+        <span class="h-2.5 w-2.5 rounded-full {% if courier_profile.availability_status %} bg-emerald-500 {% else %} bg-slate-300 {% endif %}"></span>
+        {% if courier_profile.availability_status %}Available for jobs{% else %}Unavailable{% endif %}
+      </span>
+      <button type="submit"
+        class="rounded-xl px-4 py-2 text-xs font-extrabold transition
+          {% if courier_profile.availability_status %} bg-ink text-white hover:bg-rose-600 {% else %} bg-lime text-ink hover:bg-teal hover:text-white {% endif %}">
+        {% if courier_profile.availability_status %}Go Offline{% else %}Go Online{% endif %}
+      </button>
+    </form>
+  </div>
+
+  <!-- Stat strip -->
+  <div class="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[11px] uppercase text-slate-400">Open Jobs</p>
+      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ available_jobs|length }}</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[11px] uppercase text-slate-400">My Bids</p>
+      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ my_bids|length }}</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[11px] uppercase text-slate-400">Active Deliveries</p>
+      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ active_deliveries|length }}</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[11px] uppercase text-slate-400">Completed</p>
+      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ total_completed }}</p>
+    </div>
+  </div>
+
+  <!-- Active deliveries -->
+  <section class="mb-14">
+    <h2 class="mb-5 text-xl font-extrabold text-slate-900">Active Deliveries</h2>
+    {% if active_deliveries %}
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {% for delivery in active_deliveries %}
+          <div class="rounded-2xl border border-slate-200 bg-white p-5">
+            <div class="mb-3 flex items-center justify-between">
+              <p class="font-mono text-xs font-bold text-slate-900">Delivery #{{ delivery.id }} · Order #{{ delivery.job.order.id }}</p>
+              <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
+                {% if delivery.status == 'Assigned' %} bg-slate-100 text-slate-600
+                {% elif delivery.status == 'Picked Up' %} bg-amber-100 text-amber-700
+                {% else %} bg-teal/10 text-teal {% endif %}">
+                {{ delivery.status }}
+              </span>
+            </div>
+            <div class="space-y-1.5 text-sm text-slate-600">
+              <p><span class="font-bold text-slate-800">Pickup:</span> {{ delivery.job.pickup_address }}</p>
+              <p><span class="font-bold text-slate-800">Drop-off:</span> {{ delivery.job.delivery_address }}</p>
+              <p><span class="font-bold text-slate-800">Pay:</span> ${{ delivery.job.offered_pay }}</p>
+            </div>
+            <form method="post" action="{% url 'advance_delivery_status' delivery.id %}" class="mt-4">
+              {% csrf_token %}
+              <button type="submit" class="w-full rounded-xl bg-ink px-4 py-2.5 text-xs font-extrabold text-white hover:bg-teal">
+                {% if delivery.status == 'Assigned' %} Mark as Picked Up
+                {% elif delivery.status == 'Picked Up' %} Mark as In Transit
+                {% else %} Mark as Delivered {% endif %}
+              </button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center">
+        <p class="text-sm text-slate-500">No active deliveries right now. Win a bid below to get rolling.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- Open jobs to bid on -->
+  <section class="mb-14">
+    <h2 class="mb-5 text-xl font-extrabold text-slate-900">Open Delivery Jobs</h2>
+    {% if available_jobs %}
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {% for job in available_jobs %}
+          <div class="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5">
+            <div>
+              <div class="mb-3 flex items-center justify-between">
+                <p class="font-mono text-xs font-bold text-slate-900">Job #{{ job.id }}</p>
+                <span class="rounded-full bg-lime/40 px-2.5 py-1 text-[11px] font-extrabold text-ink">${{ job.offered_pay }}</span>
+              </div>
+              <div class="space-y-1.5 text-sm text-slate-600">
+                <p><span class="font-bold text-slate-800">Seller:</span> {{ job.seller.store_name }}</p>
+                <p><span class="font-bold text-slate-800">Pickup:</span> {{ job.pickup_address }}</p>
+                <p><span class="font-bold text-slate-800">Drop-off:</span> {{ job.delivery_address }}</p>
+              </div>
+            </div>
+            <form method="post" action="{% url 'place_bid' job.id %}" class="mt-4 flex items-center gap-2">
+              {% csrf_token %}
+              <input type="number" step="0.01" min="0.01" name="bid_amount" placeholder="Your bid"
+                     class="w-24 rounded-lg border border-slate-300 px-2 py-2 text-xs focus:border-teal focus:outline-none" required>
+              <button type="submit" class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-extrabold text-white hover:bg-teal-600">
+                Place Bid
+              </button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center">
+        <p class="text-sm text-slate-500">No open delivery jobs at the moment. Check back soon.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- My bids -->
+  <section>
+    <h2 class="mb-5 text-xl font-extrabold text-slate-900">My Bids</h2>
+    {% if my_bids %}
+      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+            <tr>
+              <th class="px-5 py-3 font-bold">Job</th>
+              <th class="px-5 py-3 font-bold">Route</th>
+              <th class="px-5 py-3 font-bold">My Bid</th>
+              <th class="px-5 py-3 font-bold">Status</th>
+              <th class="px-5 py-3 font-bold"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for bid in my_bids %}
+              <tr class="hover:bg-slate-50/60">
+                <td class="px-5 py-3 font-mono text-xs font-bold text-slate-900">#{{ bid.job.id }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ bid.job.pickup_address|truncatechars:20 }} → {{ bid.job.delivery_address|truncatechars:20 }}</td>
+                <td class="px-5 py-3 font-bold text-slate-900">${{ bid.bid_amount }}</td>
+                <td class="px-5 py-3">
+                  <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
+                    {% if bid.status == 'Accepted' %} bg-emerald-100 text-emerald-700
+                    {% elif bid.status == 'Rejected' %} bg-rose-100 text-rose-700
+                    {% else %} bg-amber-100 text-amber-700 {% endif %}">
+                    {{ bid.status }}
+                  </span>
+                </td>
+                <td class="px-5 py-3 text-right">
+                  {% if bid.status == 'Pending' %}
+                    <form method="post" action="{% url 'withdraw_bid' bid.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="text-xs font-bold text-rose-600 hover:underline">Withdraw</button>
+                    </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
+        <p class="text-sm text-slate-500">You haven't placed any bids yet.</p>
+      </div>
+    {% endif %}
+  </section>
+
+</main>
+{% endblock %}

@@ -1,0 +1,340 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Seller Portal · HealthFlow{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+
+  {% if messages %}
+    <div class="mb-6 space-y-2">
+      {% for message in messages %}
+        <div class="rounded-xl border px-4 py-3 text-sm font-medium
+          {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700
+          {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal
+          {% elif message.tags == 'warning' %} border-amber-200 bg-amber-50 text-amber-700
+          {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Header -->
+  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Seller Portal</p>
+      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">{{ seller_profile.store_name }}</h1>
+      <p class="mt-1 flex items-center gap-2 text-sm text-slate-500">
+        {% if seller_profile.verification_status %}
+          <span class="inline-flex items-center gap-1 rounded-full bg-teal/10 px-2.5 py-0.5 text-xs font-bold text-teal">
+            <svg class="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Verified Seller
+          </span>
+        {% else %}
+          <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700">Verification Pending</span>
+        {% endif %}
+        · Welcome back, {{ user.first_name|default:user.username }}
+      </p>
+    </div>
+    <a href="{% url 'seller_product_add' %}" class="inline-flex items-center gap-2 rounded-xl bg-lime px-5 py-2.5 text-xs font-extrabold text-ink transition hover:bg-teal hover:text-white">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+      Add Product
+    </a>
+  </div>
+
+  <!-- Top-line stats -->
+  <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Revenue (Completed)</p>
+      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">${{ total_revenue|floatformat:2 }}</p>
+      <p class="mt-1 text-xs text-slate-500">{{ completed_orders_count }} completed order{{ completed_orders_count|pluralize }}</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Orders</p>
+      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">{{ total_orders_count }}</p>
+      <p class="mt-1 text-xs text-slate-500">{{ pending_orders_count }} pending · {{ processing_orders_count }} processing</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Products Listed</p>
+      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">{{ total_products }}</p>
+      <p class="mt-1 text-xs {% if low_stock_count or out_of_stock_count %}text-amber-600{% else %}text-slate-500{% endif %}">
+        {{ low_stock_count }} low stock{% if out_of_stock_count %} · {{ out_of_stock_count }} out of stock{% endif %}
+      </p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Delivery Jobs</p>
+      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">{{ open_jobs|length }}</p>
+      <p class="mt-1 text-xs text-slate-500">open · {{ assigned_jobs|length }} assigned</p>
+    </div>
+  </div>
+
+  <!-- Low stock alert -->
+  {% if low_stock_products %}
+    <div class="mb-10 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+      <p class="mb-2 flex items-center gap-2 text-sm font-extrabold text-amber-800">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86l-8.18 14.18A2 2 0 003.82 21h16.36a2 2 0 001.71-3l-8.18-14.14a2 2 0 00-3.42 0z"/></svg>
+        Running low on stock
+      </p>
+      <div class="flex flex-wrap gap-2">
+        {% for product in low_stock_products %}
+          <a href="{% url 'seller_product_edit' product.id %}" class="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-bold text-amber-800 hover:border-amber-500">
+            {{ product.name|truncatechars:28 }} · {{ product.stock }} left
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- My Products -->
+  <section class="mb-14">
+    <div class="mb-5 flex items-center justify-between">
+      <h2 class="text-xl font-extrabold text-slate-900">My Products</h2>
+      <a href="{% url 'seller_product_add' %}" class="text-xs font-bold text-teal hover:underline">+ Add another product</a>
+    </div>
+
+    {% if products %}
+      <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+            <tr>
+              <th class="px-5 py-3 font-bold">Product</th>
+              <th class="px-5 py-3 font-bold">Category</th>
+              <th class="px-5 py-3 font-bold">Price</th>
+              <th class="px-5 py-3 font-bold">Stock</th>
+              <th class="px-5 py-3 font-bold">Status</th>
+              <th class="px-5 py-3 font-bold text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for product in products %}
+              <tr class="hover:bg-slate-50/60">
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-3">
+                    <img src="{{ product.image_url }}" alt="" class="h-10 w-10 rounded-lg object-cover border border-slate-200">
+                    <div>
+                      <p class="font-bold text-slate-900">{{ product.name|truncatechars:40 }}</p>
+                      {% if product.is_regulated %}<p class="text-[11px] font-bold text-rose-500">Regulated item</p>{% endif %}
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-3 text-slate-600">{{ product.category.name|default:"—" }}</td>
+                <td class="px-5 py-3 font-bold text-slate-900">${{ product.price }}</td>
+                <td class="px-5 py-3">
+                  <span class="font-bold {% if product.stock == 0 %}text-rose-600{% elif product.stock <= 5 %}text-amber-600{% else %}text-slate-900{% endif %}">
+                    {{ product.stock }}
+                  </span>
+                </td>
+                <td class="px-5 py-3">
+                  {% if product.stock == 0 %}
+                    <span class="rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-bold text-rose-700">Out of stock</span>
+                  {% elif product.stock <= 5 %}
+                    <span class="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-700">Low stock</span>
+                  {% else %}
+                    <span class="rounded-full bg-teal/10 px-2.5 py-1 text-[11px] font-bold text-teal">In stock</span>
+                  {% endif %}
+                </td>
+                <td class="px-5 py-3">
+                  <div class="flex items-center justify-end gap-3">
+                    <a href="{% url 'seller_product_edit' product.id %}" class="text-xs font-bold text-slate-600 hover:text-teal">Edit</a>
+                    <form method="post" action="{% url 'seller_product_delete' product.id %}" onsubmit="return confirm('Remove \'{{ product.name|escapejs }}\' from your catalog?');">
+                      {% csrf_token %}
+                      <button type="submit" class="text-xs font-bold text-rose-600 hover:underline">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
+        <p class="text-sm text-slate-500">You haven't listed any products yet.</p>
+        <a href="{% url 'seller_product_add' %}" class="mt-4 inline-block rounded-xl bg-ink px-5 py-2.5 text-xs font-extrabold text-white hover:bg-teal">List your first product</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- Recent Orders -->
+  <section class="mb-14">
+    <h2 class="mb-5 text-xl font-extrabold text-slate-900">Recent Orders</h2>
+    {% if seller_orders %}
+      <div class="space-y-4">
+        {% for order in seller_orders %}
+          <div class="rounded-2xl border border-slate-200 bg-white p-5">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p class="font-mono text-xs font-bold text-slate-900">Order #{{ order.id }} · {{ order.customer.user.username }}</p>
+                <p class="text-[11px] text-slate-400">{{ order.created_at|date:"M d, Y · g:i A" }}</p>
+              </div>
+              <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
+                {% if order.status == 'Pending' %} bg-amber-100 text-amber-700
+                {% elif order.status == 'Processing' %} bg-sky-100 text-sky-700
+                {% elif order.status == 'Completed' %} bg-teal/10 text-teal
+                {% else %} bg-rose-100 text-rose-700 {% endif %}">
+                {{ order.status }}
+              </span>
+            </div>
+
+            <div class="mb-3 divide-y divide-slate-100 rounded-xl border border-slate-100">
+              {% for item in order.seller_items %}
+                <div class="flex items-center justify-between px-4 py-2 text-sm">
+                  <span class="text-slate-700">{{ item.quantity }} × {{ item.product.name|truncatechars:40 }}</span>
+                  <span class="font-bold text-slate-900">${{ item.line_subtotal }}</span>
+                </div>
+              {% endfor %}
+            </div>
+
+            {% if order.has_job_posting %}
+              <p class="text-xs font-bold text-teal">✓ Delivery job already posted for this order</p>
+            {% elif order.needs_delivery %}
+              <details class="group">
+                <summary class="cursor-pointer list-none text-xs font-bold text-teal hover:underline">
+                  + Post a delivery job for this order
+                </summary>
+                <form method="post" action="{% url 'seller_post_delivery_job' order.id %}" class="mt-3 grid grid-cols-1 gap-3 rounded-xl bg-slate-50 p-4 sm:grid-cols-3">
+                  {% csrf_token %}
+                  <input type="text" name="pickup_address" placeholder="Pickup address" required
+                         class="rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-teal focus:outline-none sm:col-span-1">
+                  <input type="text" name="delivery_address" placeholder="Delivery address" required
+                         class="rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-teal focus:outline-none sm:col-span-1">
+                  <div class="flex gap-2 sm:col-span-1">
+                    <input type="number" step="0.01" min="0.01" name="offered_pay" placeholder="Offered pay ($)" required
+                           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs focus:border-teal focus:outline-none">
+                    <button type="submit" class="whitespace-nowrap rounded-lg bg-ink px-4 py-2 text-xs font-extrabold text-white hover:bg-teal">
+                      Post Job
+                    </button>
+                  </div>
+                </form>
+              </details>
+            {% else %}
+              <p class="text-xs text-slate-400">No delivery action needed.</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
+        <p class="text-sm text-slate-500">No orders yet. Once customers buy your products, they'll show up here.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- Delivery Jobs -->
+  <section class="mb-14">
+    <h2 class="mb-5 text-xl font-extrabold text-slate-900">Open Delivery Jobs & Bids</h2>
+    {% if open_jobs %}
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {% for job in open_jobs %}
+          <div class="rounded-2xl border border-slate-200 bg-white p-5">
+            <div class="mb-3 flex items-center justify-between">
+              <p class="font-mono text-xs font-bold text-slate-900">Job #{{ job.id }} · Order #{{ job.order.id }}</p>
+              <span class="rounded-full bg-lime/40 px-2.5 py-1 text-[11px] font-extrabold text-ink">${{ job.offered_pay }}</span>
+            </div>
+            <div class="mb-4 space-y-1.5 text-sm text-slate-600">
+              <p><span class="font-bold text-slate-800">Pickup:</span> {{ job.pickup_address }}</p>
+              <p><span class="font-bold text-slate-800">Drop-off:</span> {{ job.delivery_address }}</p>
+            </div>
+
+            {% with bids=job.bids.all %}
+              {% if bids %}
+                <p class="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Bids ({{ bids|length }})</p>
+                <div class="space-y-2">
+                  {% for bid in bids %}
+                    <div class="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                      <div class="text-xs">
+                        <p class="font-bold text-slate-800">{{ bid.courier.user.username }}</p>
+                        <p class="text-slate-500">${{ bid.bid_amount }} · {{ bid.courier.vehicle_type }}</p>
+                      </div>
+                      {% if bid.status == 'Pending' %}
+                        <form method="post" action="{% url 'seller_accept_bid' bid.id %}">
+                          {% csrf_token %}
+                          <button type="submit" class="rounded-lg bg-teal px-3 py-1.5 text-[11px] font-extrabold text-white hover:bg-ink">
+                            Accept
+                          </button>
+                        </form>
+                      {% else %}
+                        <span class="rounded-full px-2 py-1 text-[10px] font-bold
+                          {% if bid.status == 'Accepted' %} bg-emerald-100 text-emerald-700 {% else %} bg-rose-100 text-rose-700 {% endif %}">
+                          {{ bid.status }}
+                        </span>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <p class="text-xs text-slate-400">No bids yet — sit tight, couriers are browsing open jobs.</p>
+              {% endif %}
+            {% endwith %}
+
+            <form method="post" action="{% url 'seller_cancel_job' job.id %}" class="mt-4" onsubmit="return confirm('Cancel this delivery job posting?');">
+              {% csrf_token %}
+              <button type="submit" class="w-full rounded-xl border border-rose-200 px-4 py-2 text-xs font-extrabold text-rose-600 hover:bg-rose-50">
+                Cancel Job Posting
+              </button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center">
+        <p class="text-sm text-slate-500">No open delivery jobs. Post one from an order above to line up a courier.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- Assigned deliveries -->
+  {% if assigned_jobs %}
+    <section class="mb-14">
+      <h2 class="mb-5 text-xl font-extrabold text-slate-900">Assigned Deliveries</h2>
+      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+            <tr>
+              <th class="px-5 py-3 font-bold">Job</th>
+              <th class="px-5 py-3 font-bold">Courier</th>
+              <th class="px-5 py-3 font-bold">Route</th>
+              <th class="px-5 py-3 font-bold">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for job in assigned_jobs %}
+              <tr class="hover:bg-slate-50/60">
+                <td class="px-5 py-3 font-mono text-xs font-bold text-slate-900">#{{ job.id }} · Order #{{ job.order.id }}</td>
+                <td class="px-5 py-3 text-slate-700">{{ job.delivery.courier.user.username }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ job.pickup_address|truncatechars:20 }} → {{ job.delivery_address|truncatechars:20 }}</td>
+                <td class="px-5 py-3">
+                  <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
+                    {% if job.delivery.status == 'Delivered' %} bg-teal/10 text-teal
+                    {% elif job.delivery.status == 'In Transit' %} bg-sky-100 text-sky-700
+                    {% elif job.delivery.status == 'Picked Up' %} bg-amber-100 text-amber-700
+                    {% else %} bg-slate-100 text-slate-600 {% endif %}">
+                    {{ job.delivery.status }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+  <!-- Top products -->
+  {% if top_products %}
+    <section>
+      <h2 class="mb-5 text-xl font-extrabold text-slate-900">Top Sellers</h2>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {% for item in top_products %}
+          <div class="rounded-2xl border border-slate-200 bg-white p-5">
+            <p class="text-sm font-bold text-slate-900">{{ item.product__name|truncatechars:26 }}</p>
+            <p class="mt-2 text-xl font-extrabold text-teal">{{ item.units_sold }}</p>
+            <p class="text-[11px] text-slate-400">units sold · ${{ item.revenue|floatformat:2 }} revenue</p>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+</main>
+{% endblock %}

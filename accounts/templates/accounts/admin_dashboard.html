@@ -1,94 +1,238 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Control Hub · Health Logistics</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Manrope', 'sans-serif'],
-            mono: ['DM Mono', 'monospace'],
-          },
-          colors: {
-            ink: '#0B1620',
-            paper: '#F6F4EF',
-            pulse: '#12B8A6',
-            signal: '#D9FF5D',
-          }
-        }
-      }
-    }
-  </script>
-</head>
-<body class="min-h-screen bg-paper font-sans text-ink">
-  <header class="border-b border-slate-200 bg-ink text-white">
-    <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-      <div class="flex items-center gap-3">
-        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-signal text-sm font-extrabold text-ink">H+</div>
-        <div>
-          <p class="font-mono text-[9px] uppercase tracking-[0.2em] text-signal">Control Hub</p>
-          <p class="text-xs font-bold tracking-tight">System Operations</p>
+{% extends "accounts/base.html" %}
+
+{% block title %}Admin Control Hub · HealthFlow{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+
+  {% if messages %}
+    <div class="mb-6 space-y-2">
+      {% for message in messages %}
+        <div class="rounded-xl border px-4 py-3 text-sm font-medium
+          {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700
+          {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal
+          {% elif message.tags == 'warning' %} border-amber-200 bg-amber-50 text-amber-700
+          {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}">
+          {{ message }}
         </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Header -->
+  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Administrative Portal</p>
+      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">Control Hub</h1>
+      <p class="mt-1 text-sm text-slate-500">Platform-wide activity, revenue, and operations at a glance.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <a href="{% url 'customer_dashboard' %}" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">
+        Storefront View
+      </a>
+      <a href="/admin/" target="_blank" class="rounded-xl bg-ink px-4 py-2.5 text-xs font-extrabold text-white hover:bg-teal">
+        Django Admin →
+      </a>
+    </div>
+  </div>
+
+  <!-- Top-line stat cards -->
+  <div class="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Revenue (Completed)</p>
+      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">${{ total_revenue|floatformat:2 }}</p>
+      <p class="mt-1 text-xs text-slate-500">{{ completed_orders }} completed order{{ completed_orders|pluralize }}</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Total Orders</p>
+      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">{{ total_orders }}</p>
+      <p class="mt-1 text-xs text-slate-500">{{ pending_orders }} pending · {{ processing_orders }} processing</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Total Users</p>
+      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">{{ total_users }}</p>
+      <p class="mt-1 text-xs text-slate-500">+{{ new_users_week }} in the last 7 days</p>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Products Listed</p>
+      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">{{ total_products }}</p>
+      <p class="mt-1 text-xs {% if low_stock_count %}text-amber-600{% else %}text-slate-500{% endif %}">{{ low_stock_count }} low on stock (≤5)</p>
+    </div>
+  </div>
+
+  <!-- Secondary stat cards -->
+  <div class="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4">
+    <div class="rounded-2xl border border-slate-200 bg-ink p-5 text-white">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-lime">User Breakdown</p>
+      <div class="mt-2 space-y-1 text-xs">
+        <div class="flex justify-between"><span class="text-slate-300">Customers</span><span class="font-bold">{{ total_customers }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-300">Sellers</span><span class="font-bold">{{ total_sellers }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-300">Providers</span><span class="font-bold">{{ total_providers }}</span></div>
+        <div class="flex justify-between"><span class="text-slate-300">Couriers</span><span class="font-bold">{{ total_couriers }}</span></div>
       </div>
-      <div class="flex items-center gap-6">
-        <span class="font-mono text-xs text-slate-300">
-          USER: <strong class="text-signal">{{ user.username }}</strong>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Delivery Pipeline</p>
+      <div class="mt-2 space-y-1 text-xs text-slate-600">
+        <div class="flex justify-between"><span>Open job postings</span><span class="font-bold text-ink">{{ open_delivery_jobs }}</span></div>
+        <div class="flex justify-between"><span>Active deliveries</span><span class="font-bold text-ink">{{ active_deliveries }}</span></div>
+        <div class="flex justify-between"><span>Completed deliveries</span><span class="font-bold text-ink">{{ completed_deliveries }}</span></div>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Order Status</p>
+      <div class="mt-2 space-y-1 text-xs text-slate-600">
+        <div class="flex justify-between"><span>Completed</span><span class="font-bold text-ink">{{ completed_orders }}</span></div>
+        <div class="flex justify-between"><span>Processing</span><span class="font-bold text-ink">{{ processing_orders }}</span></div>
+        <div class="flex justify-between"><span>Pending</span><span class="font-bold text-ink">{{ pending_orders }}</span></div>
+        <div class="flex justify-between"><span>Cancelled</span><span class="font-bold text-ink">{{ cancelled_orders }}</span></div>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-5">
+      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">AI Assistant Health</p>
+      <div class="mt-2 space-y-1 text-xs text-slate-600">
+        <div class="flex justify-between"><span>Total queries logged</span><span class="font-bold text-ink">{{ ai_logs_total }}</span></div>
+        <div class="flex justify-between"><span>Fallback rate</span><span class="font-bold {% if ai_fallback_rate > 20 %}text-rose-600{% else %}text-ink{% endif %}">{{ ai_fallback_rate }}%</span></div>
+        <div class="flex justify-between"><span>Upcoming appointments</span><span class="font-bold text-ink">{{ upcoming_appointments }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <!-- Recent Orders -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 lg:col-span-2">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-lg font-extrabold tracking-tight text-ink">Recent Orders</h2>
+        <span class="font-mono text-[10px] uppercase tracking-widest text-slate-400">Last 8</span>
+      </div>
+      {% if recent_orders %}
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+                <th class="pb-2 pr-3 font-semibold">Order</th>
+                <th class="pb-2 pr-3 font-semibold">Customer</th>
+                <th class="pb-2 pr-3 font-semibold">Total</th>
+                <th class="pb-2 pr-3 font-semibold">Status</th>
+                <th class="pb-2 font-semibold">Placed</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for order in recent_orders %}
+                <tr>
+                  <td class="py-2.5 pr-3 font-mono text-xs text-slate-500">#{{ order.id }}</td>
+                  <td class="py-2.5 pr-3 font-medium text-ink">{{ order.customer.user.username }}</td>
+                  <td class="py-2.5 pr-3 font-semibold text-ink">${{ order.total|floatformat:2 }}</td>
+                  <td class="py-2.5 pr-3">
+                    <span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide
+                      {% if order.status == 'Completed' %} bg-teal/10 text-teal
+                      {% elif order.status == 'Processing' %} bg-amber-100 text-amber-700
+                      {% elif order.status == 'Cancelled' %} bg-rose-100 text-rose-700
+                      {% else %} bg-slate-100 text-slate-600 {% endif %}">
+                      {{ order.status }}
+                    </span>
+                  </td>
+                  <td class="py-2.5 text-xs text-slate-500">{{ order.created_at|date:"M j, Y" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-sm text-slate-500">No orders yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- Top Products -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-lg font-extrabold tracking-tight text-ink">Top Products</h2>
+        <span class="font-mono text-[10px] uppercase tracking-widest text-slate-400">By units sold</span>
+      </div>
+      {% if top_products %}
+        <ul class="space-y-3">
+          {% for p in top_products %}
+            <li class="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+              <div>
+                <p class="text-sm font-semibold text-ink">{{ p.product__name }}</p>
+                <p class="text-xs text-slate-500">{{ p.units_sold }} sold · stock {{ p.product__stock }}</p>
+              </div>
+              <p class="font-mono text-sm font-bold text-teal">${{ p.revenue|floatformat:2 }}</p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-sm text-slate-500">No sales recorded yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if low_stock_products %}
+  <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-6">
+    <h2 class="mb-3 text-sm font-extrabold uppercase tracking-wide text-amber-700">⚠ Low Stock Alert</h2>
+    <div class="flex flex-wrap gap-2">
+      {% for product in low_stock_products %}
+        <span class="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800">
+          {{ product.name }} — {{ product.stock }} left
         </span>
-        <a href="{% url 'logout' %}" class="border border-white/20 bg-white/5 px-3.5 py-1.5 font-mono text-xs font-bold uppercase tracking-wider text-white transition hover:bg-pulse hover:text-ink">
-          Logout
-        </a>
-      </div>
+      {% endfor %}
     </div>
-  </header>
+  </div>
+  {% endif %}
 
-  <main class="mx-auto max-w-5xl px-6 py-12">
-    <div class="mb-10">
-      <p class="mb-2 font-mono text-xs font-medium uppercase tracking-[0.2em] text-pulse">Administrative Portal</p>
-      <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl">System Management</h1>
-      <p class="mt-2 text-sm text-slate-600">Select an operational interface to proceed.</p>
+  <!-- User Management -->
+  <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-lg font-extrabold tracking-tight text-ink">User Management</h2>
+      <form method="get" class="flex items-center gap-2">
+        <select name="role" onchange="this.form.submit()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 focus:border-teal focus:outline-none">
+          <option value="" {% if not role_filter %}selected{% endif %}>All Roles</option>
+          <option value="Admin" {% if role_filter == 'Admin' %}selected{% endif %}>Admin</option>
+          <option value="Customer" {% if role_filter == 'Customer' %}selected{% endif %}>Customer</option>
+          <option value="Seller" {% if role_filter == 'Seller' %}selected{% endif %}>Seller</option>
+          <option value="Provider" {% if role_filter == 'Provider' %}selected{% endif %}>Provider</option>
+          <option value="Courier" {% if role_filter == 'Courier' %}selected{% endif %}>Courier</option>
+        </select>
+      </form>
     </div>
-
-    <div class="grid gap-6 md:grid-cols-2">
-      <!-- Database Management Card -->
-      <div class="flex flex-col justify-between border border-slate-200 bg-white p-8 transition hover:border-slate-400">
-        <div>
-          <div class="mb-4 inline-block bg-ink px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-signal">
-            Database Operations
-          </div>
-          <h2 class="text-xl font-bold tracking-tight">Django Admin Control</h2>
-          <p class="mt-3 text-sm leading-6 text-slate-600">
-            Access raw models, user tables, permission levels, and direct database queries.
-          </p>
-        </div>
-        <a href="/admin/" target="_blank" class="group mt-8 flex items-center justify-between border border-ink bg-white px-5 py-3.5 text-sm font-bold text-ink transition hover:bg-ink hover:text-white">
-          <span>Open Database Admin</span>
-          <span class="font-mono text-lg transition-transform group-hover:translate-x-1">→</span>
-        </a>
+    {% if all_users_with_roles %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+              <th class="pb-2 pr-3 font-semibold">Username</th>
+              <th class="pb-2 pr-3 font-semibold">Email</th>
+              <th class="pb-2 pr-3 font-semibold">Role</th>
+              <th class="pb-2 pr-3 font-semibold">Joined</th>
+              <th class="pb-2 font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for row in all_users_with_roles %}
+              <tr>
+                <td class="py-2.5 pr-3 font-medium text-ink">{{ row.user.username }}</td>
+                <td class="py-2.5 pr-3 text-slate-500">{{ row.user.email|default:"—" }}</td>
+                <td class="py-2.5 pr-3">
+                  <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600">{{ row.role }}</span>
+                </td>
+                <td class="py-2.5 pr-3 text-xs text-slate-500">{{ row.user.date_joined|date:"M j, Y" }}</td>
+                <td class="py-2.5">
+                  {% if row.user.is_active %}
+                    <span class="text-xs font-bold text-teal">Active</span>
+                  {% else %}
+                    <span class="text-xs font-bold text-rose-500">Disabled</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
+    {% else %}
+      <p class="text-sm text-slate-500">No users match this filter.</p>
+    {% endif %}
+    <p class="mt-4 text-xs text-slate-400">For editing permissions, resetting passwords, or deleting accounts, use the <a href="/admin/" target="_blank" class="font-semibold text-teal underline">Django Admin</a>.</p>
+  </div>
 
-      <!-- Customer Portal Card -->
-      <div class="flex flex-col justify-between border border-slate-200 bg-white p-8 transition hover:border-slate-400">
-        <div>
-          <div class="mb-4 inline-block bg-pulse px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-ink">
-            Storefront Mode
-          </div>
-          <h2 class="text-xl font-bold tracking-tight">Customer Interface</h2>
-          <p class="mt-3 text-sm leading-6 text-slate-600">
-            Preview the live buyer experience, catalog navigation, and order fulfillment workflows.
-          </p>
-        </div>
-        <a href="{% url 'customer_dashboard' %}" class="group mt-8 flex items-center justify-between bg-ink px-5 py-3.5 text-sm font-bold text-white transition hover:bg-pulse hover:text-ink">
-          <span>Enter Customer Portal</span>
-          <span class="font-mono text-lg transition-transform group-hover:translate-x-1">→</span>
-        </a>
-      </div>
-    </div>
-  </main>
-</body>
-</html>
+</main>
+{% endblock %}
