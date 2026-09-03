@@ -10,7 +10,7 @@ from datetime import timedelta
 from .forms import CustomUserCreationForm
 from accounts.models import ProviderProfile, CustomerProfile, CourierProfile, SellerProfile
 from catalog.models import Category, Product, Appointment
-
+from messaging.models import Conversation, ChatMessage
 from orders.models import Order, OrderItem, DeliveryJobPosting, DeliveryBid, Delivery
 from orders.cart import Cart
 
@@ -199,7 +199,7 @@ def admin_dashboard_view(request):
         'all_users_with_roles': all_users_with_roles,
         'role_filter': role_filter,
     }
-    return render(request, 'accounts/admin_dashboard.html', context)
+    return render(request, 'accounts/admin/admin_dashboard.html', context)
 
 @login_required
 def customer_dashboard_view(request):
@@ -233,7 +233,7 @@ def customer_dashboard_view(request):
         'cart_item_count': len(cart),
         'total_orders': Order.objects.filter(customer=customer_profile).count(),
     }
-    return render(request, 'accounts/customer_dashboard.html', context)
+    return render(request, 'accounts/customer/customer_dashboard.html', context)
 
 @login_required
 def seller_dashboard_view(request):
@@ -317,7 +317,7 @@ def seller_dashboard_view(request):
         'assigned_jobs': assigned_jobs,
         'top_products': top_products,
     }
-    return render(request, 'accounts/seller_dashboard.html', context)
+    return render(request, 'accounts/seller/seller_dashboard.html', context)
 
 @login_required
 def provider_dashboard_view(request):
@@ -368,7 +368,7 @@ def provider_dashboard_view(request):
         'cancelled_count': cancelled_count,
         'total_earnings': total_earnings,
     }
-    return render(request, 'accounts/provider_dashboard.html', context)
+    return render(request, 'accounts/provider/provider_dashboard.html', context)
 
 @login_required
 def provider_profile_view(request):
@@ -395,7 +395,126 @@ def provider_profile_view(request):
     context = {
         'provider': provider_profile,
     }
-    return render(request, 'accounts/provider_profile.html', context)
+    return render(request, 'accounts/provider/provider_profile.html', context)
+
+@login_required
+def provider_appointments_view(request):
+    provider_profile = getattr(request.user, 'provider_profile', None)
+    if provider_profile is None:
+        messages.error(request, "You need a provider profile to access appointments.")
+        return redirect_based_on_role(request.user)
+
+    if request.method == 'POST':
+        appointment_id = request.POST.get('appointment_id')
+        new_status = request.POST.get('status')
+        appointment = get_object_or_404(Appointment, id=appointment_id, provider=provider_profile)
+        if new_status in dict(Appointment.STATUS_CHOICES):
+            appointment.status = new_status
+            appointment.save(update_fields=['status'])
+            messages.success(request, f"Appointment status updated to {new_status}.")
+        return redirect('provider_appointments')
+
+    appointments = (
+        Appointment.objects.filter(provider=provider_profile)
+        .select_related('customer__user')
+        .order_by('-appointment_date')
+    )
+
+    context = {
+        'appointments': appointments,
+    }
+    return render(request, 'accounts/provider/provider_appointments.html', context)
+
+
+@login_required
+def provider_messages_view(request):
+    provider_profile = getattr(request.user, 'provider_profile', None)
+    if provider_profile is None:
+        messages.error(request, "You need a provider profile to access messages.")
+        return redirect_based_on_role(request.user)
+
+    # Fetch distinct patients who have booked appointments with this provider
+    patients = (
+        CustomerProfile.objects.filter(appointments__provider=provider_profile)
+        .distinct()
+        .select_related('user')
+    )
+
+    selected_patient_id = request.GET.get('patient_id')
+    selected_patient = None
+    chat_messages = []
+
+    if selected_patient_id:
+        selected_patient = get_object_or_404(CustomerProfile, id=selected_patient_id)
+
+        # One thread per (provider, patient) pair — created on first contact,
+        # reused after that regardless of who sent the first message.
+        conversation = Conversation.get_or_create_between(
+            request.user, selected_patient.user, thread_type='Customer-Provider'
+        )
+
+        if request.method == 'POST':
+            body = request.POST.get('message', '').strip()
+            if body:
+                ChatMessage.objects.create(
+                    conversation=conversation,
+                    sender=request.user,
+                    content=body,
+                )
+                messages.success(request, "Message sent successfully.")
+                return redirect(f"{request.path}?patient_id={selected_patient_id}")
+
+        chat_messages = (
+            conversation.messages
+            .select_related('sender')
+            .order_by('timestamp')
+        )
+
+    context = {
+        'patients': patients,
+        'selected_patient': selected_patient,
+        'chat_messages': chat_messages,
+    }
+    return render(request, 'accounts/provider/provider_messages.html', context)
+
+
+@login_required
+def provider_patients_view(request):
+    provider_profile = getattr(request.user, 'provider_profile', None)
+    if provider_profile is None:
+        messages.error(request, "You need a provider profile to access patient records.")
+        return redirect_based_on_role(request.user)
+
+    appointments = (
+        Appointment.objects.filter(provider=provider_profile)
+        .select_related('customer__user')
+        .order_by('customer_id', '-appointment_date')
+    )
+
+    # Group this provider's appointments by patient, newest visit first.
+    patients_map = {}
+    for appt in appointments:
+        cust_id = appt.customer_id
+        entry = patients_map.setdefault(cust_id, {
+            'customer': appt.customer,
+            'appointments': [],
+            'total_visits': 0,
+            'last_visit': None,
+        })
+        entry['appointments'].append(appt)
+        entry['total_visits'] += 1
+        if entry['last_visit'] is None or appt.appointment_date > entry['last_visit']:
+            entry['last_visit'] = appt.appointment_date
+
+    patients = sorted(
+        patients_map.values(),
+        key=lambda p: p['last_visit'] or timezone.now(),
+        reverse=True,
+    )
+
+    context = {'patients': patients}
+    return render(request, 'accounts/provider/providers_patients.html', context)
+
 
 @login_required
 def courier_dashboard_view(request):
@@ -443,4 +562,4 @@ def courier_dashboard_view(request):
         'completed_deliveries': completed_deliveries,
         'total_completed': completed_deliveries.count(),
     }
-    return render(request, 'accounts/courier_dashboard.html', context)
+    return render(request, 'accounts/courier/courier_dashboard.html', context)
