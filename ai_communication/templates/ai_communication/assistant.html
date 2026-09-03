@@ -1,0 +1,152 @@
+{% extends "accounts/base.html" %}
+{% load chat_markdown %}
+
+{% block title %}AI Assistant · HealthFlow{% endblock %}
+
+{% block content %}
+<style>
+  .mkd p { margin: 0.4em 0; }
+  .mkd p:first-child { margin-top: 0; }
+  .mkd p:last-child { margin-bottom: 0; }
+  .mkd ul { list-style: disc; padding-left: 1.25rem; margin: 0.4em 0; }
+  .mkd ol { list-style: decimal; padding-left: 1.25rem; margin: 0.4em 0; }
+  .mkd li { margin: 0.15em 0; }
+  .mkd strong { font-weight: 700; }
+  .mkd code { background: #f1f5f9; padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.9em; }
+</style>
+
+<main class="mx-auto max-w-4xl px-5 py-10 sm:px-8">
+
+  {% if messages %}
+    <div class="mb-6 space-y-2">
+      {% for message in messages %}
+        <div class="rounded-xl border px-4 py-3 text-sm font-medium
+          {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700
+          {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal
+          {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Header -->
+  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Help Center</p>
+      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">AI Assistant</h1>
+      <p class="mt-1 text-sm text-slate-500">Ask about orders, appointments, deliveries, or your account — instant answers, no wait.</p>
+    </div>
+    <form method="post" action="{% url 'ai_assistant_clear' %}">
+      {% csrf_token %}
+      <button type="submit" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">
+        Clear chat
+      </button>
+    </form>
+  </div>
+
+  <!-- Chat window -->
+  <section class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="max-h-[28rem] space-y-4 overflow-y-auto p-6">
+      {% if not chat_history %}
+        <div class="flex items-start gap-3">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-lime">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div class="max-w-[85%] rounded-2xl rounded-tl-sm bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            Hi! I'm the HealthFlow assistant. Ask me something like
+            <span class="font-semibold">"How do I track my order?"</span> or
+            <span class="font-semibold">"How do I become a courier?"</span>
+          </div>
+        </div>
+      {% endif %}
+
+      {% for turn in chat_history %}
+        {% if turn.role == 'user' %}
+          <div class="flex justify-end">
+            <div class="max-w-[85%] rounded-2xl rounded-tr-sm bg-ink px-4 py-3 text-sm text-white">
+              {{ turn.text }}
+            </div>
+          </div>
+        {% else %}
+          <div class="flex items-start gap-3">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-lime">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div class="max-w-[85%] space-y-1.5">
+              <div class="rounded-2xl rounded-tl-sm bg-slate-50 px-4 py-3 text-sm text-slate-700 mkd">
+                {{ turn.text|render_markdown }}
+              </div>
+              {% if turn.fallback %}
+                <span class="inline-block rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                  Couldn't find a confident match — team notified
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Composer -->
+    <form method="post" id="ai-composer-form" class="flex items-center gap-2 border-t border-slate-100 p-4">
+      {% csrf_token %}
+      <input type="text" name="query" id="ai-query-input" required autocomplete="off"
+             placeholder="Type your question…"
+             class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-teal focus:outline-none">
+      <button type="submit" class="shrink-0 rounded-xl bg-ink px-5 py-2.5 text-xs font-extrabold text-white transition hover:bg-teal">
+        Ask
+      </button>
+    </form>
+  </section>
+
+  <!-- Quick questions -->
+  <section class="mt-6">
+    <p class="mb-3 font-mono text-[11px] uppercase tracking-[0.15em] text-slate-400">Quick questions</p>
+    <div class="flex flex-wrap gap-2">
+      {% for entry in faq_entries|slice:":6" %}
+        <button type="button"
+                class="quick-question rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600 transition hover:border-teal hover:text-teal"
+                data-question="{{ entry.question }}">
+          {{ entry.question }}
+        </button>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Browse all topics -->
+  <section class="mt-12">
+    <h2 class="mb-5 text-xl font-extrabold text-slate-900">Browse Help Topics</h2>
+    <div class="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      {% for entry in faq_entries %}
+        <details class="group px-5 py-4">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4">
+            <div>
+              <p class="font-mono text-[10px] font-bold uppercase tracking-wider text-teal-600">{{ entry.category }}</p>
+              <p class="mt-0.5 text-sm font-bold text-slate-900">{{ entry.question }}</p>
+            </div>
+            <svg class="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          </summary>
+          <p class="mt-3 text-sm leading-relaxed text-slate-600">{{ entry.answer }}</p>
+        </details>
+      {% endfor %}
+    </div>
+  </section>
+
+</main>
+
+<script>
+  document.querySelectorAll('.quick-question').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.getElementById('ai-query-input').value = this.dataset.question;
+      document.getElementById('ai-composer-form').submit();
+    });
+  });
+
+  // Auto-scroll chat window to the latest message.
+  (function () {
+    var chatWindow = document.querySelector('.overflow-y-auto');
+    if (chatWindow) { chatWindow.scrollTop = chatWindow.scrollHeight; }
+  })();
+</script>
+{% endblock %}
