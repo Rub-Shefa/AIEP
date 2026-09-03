@@ -1,4 +1,4 @@
 from django.contrib import admin
-from .models import AIQueryLog, Conversation, Message
+from .models import AIQueryLog
 
-admin.site.register([AIQueryLog, Conversation, Message])
+admin.site.register(AIQueryLog)

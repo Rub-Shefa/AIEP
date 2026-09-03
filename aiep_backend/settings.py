@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'catalog',
     'orders',
     'ai_communication',
+    'messaging',
 ]
 
 MIDDLEWARE = [
