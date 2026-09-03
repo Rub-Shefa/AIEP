@@ -15,4 +15,6 @@ urlpatterns = [
     path('provider-profile/', views.provider_profile_view, name='provider_profile'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('provider-appointments/', views.provider_appointments_view, name='provider_appointments'),
+    path('provider-messages/', views.provider_messages_view, name='provider_messages'),
 ]
