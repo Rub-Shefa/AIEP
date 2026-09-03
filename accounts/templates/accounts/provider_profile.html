@@ -1,0 +1,147 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Doctor Profile - AIEP Health{% endblock %}
+
+{% block content %}
+<!-- Include Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="flex h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between p-4 shrink-0">
+    <div>
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3 px-2 py-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/30">
+          +
+        </div>
+        <div>
+          <h2 class="font-bold text-lg leading-none text-white tracking-wide">AIEP Health</h2>
+          <span class="text-xs text-cyan-400 font-medium tracking-wider uppercase">Provider Suite</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="space-y-1">
+        <a href="{% url 'provider_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 text-sm transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          Overview
+        </a>
+        <a href="#appointments" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 text-sm transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          Appointments
+        </a>
+        <a href="#patients" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 text-sm transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          Patients
+        </a>
+        <a href="#profile" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 font-medium text-sm transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          My Profile
+        </a>
+      </nav>
+    </div>
+
+    <!-- Provider Profile Footer Info -->
+    <div class="border-t border-slate-800 pt-4 flex items-center justify-between">
+      <div class="flex items-center gap-3 overflow-hidden">
+        <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-semibold text-sm text-cyan-400 shrink-0">
+          {{ user.username|slice:":2"|upper }}
+        </div>
+        <div class="truncate">
+          <p class="text-xs font-semibold text-slate-200 truncate">{{ user.get_full_name|default:user.username }}</p>
+          <p class="text-[10px] text-slate-500">Healthcare Provider</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 overflow-y-auto p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
+    
+    <!-- HEADER BAR -->
+    <header class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-2xl font-bold text-white tracking-tight">Doctor Profile Settings</h1>
+        <p class="text-xs text-slate-400">Manage your clinical details, bio, consultation fees, and availability.</p>
+      </div>
+      <a href="{% url 'provider_dashboard' %}" class="text-xs text-cyan-400 hover:underline flex items-center gap-1">
+        ← Back to Dashboard
+      </a>
+    </header>
+
+    <div class="max-w-4xl space-y-6">
+
+      <!-- PROFILE OVERVIEW CARD -->
+      <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-6 backdrop-blur-md flex flex-col md:flex-row items-center gap-6">
+        <div class="relative">
+          <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-3xl text-white shadow-xl shadow-cyan-500/20">
+            {{ user.username|slice:":2"|upper }}
+          </div>
+          <span class="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
+        </div>
+        
+        <div class="flex-1 text-center md:text-left">
+          <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+            <h2 class="text-xl font-bold text-white">Dr. {{ user.get_full_name|default:user.username }}</h2>
+            <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-[10px] font-semibold px-2 py-0.5 rounded-full w-fit mx-auto md:mx-0">
+              Verified Practitioner
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mb-3">{{ provider.specialization|default:"General Medicine & Telehealth Specialist" }}</p>
+          <div class="flex flex-wrap justify-center md:justify-start gap-4 text-xs text-slate-300">
+            <span><strong>Consultation Fee:</strong> ${{ provider.consultation_fee|default:"50.00" }}</span>
+            <span><strong>Rating:</strong> ⭐ 4.9/5.0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- EDIT PROFILE FORM -->
+      <form method="POST" class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-6 backdrop-blur-md space-y-6">
+        {% csrf_token %}
+        <h3 class="font-semibold text-slate-200 text-sm border-b border-slate-800 pb-3">Professional Information</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- Full Name -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Full Name</label>
+            <input type="text" name="full_name" value="{{ user.get_full_name }}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+          </div>
+
+          <!-- Specialization -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Specialization</label>
+            <input type="text" name="specialization" value="{{ provider.specialization }}" placeholder="e.g. Cardiology, General Physician" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+          </div>
+
+          <!-- Consultation Fee -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Consultation Fee ($)</label>
+            <input type="number" step="0.01" name="consultation_fee" value="{{ provider.consultation_fee }}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Email Address</label>
+            <input type="email" value="{{ user.email }}" disabled class="w-full bg-slate-950/50 border border-slate-800/50 rounded-lg px-3 py-2 text-xs text-slate-500 cursor-not-allowed">
+          </div>
+        </div>
+
+        <!-- Bio / Description -->
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Professional Bio</label>
+          <textarea name="bio" rows="4" placeholder="Briefly describe your medical background, certifications, and expertise..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">{{ provider.bio }}</textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="submit" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold px-5 py-2 rounded-lg text-xs transition shadow-lg shadow-cyan-500/20">
+            Save Profile Changes
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </main>
+</div>
+{% endblock %}
