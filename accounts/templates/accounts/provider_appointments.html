@@ -1,0 +1,97 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Appointments - AIEP Health{% endblock %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="flex h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between p-4 shrink-0">
+    <div>
+      <div class="flex items-center gap-3 px-2 py-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/30">
+          +
+        </div>
+        <div>
+          <h2 class="font-bold text-lg leading-none text-white tracking-wide">AIEP Health</h2>
+          <span class="text-xs text-cyan-400 font-medium tracking-wider uppercase">Provider Suite</span>
+        </div>
+      </div>
+
+      <nav class="space-y-1">
+        <a href="{% url 'provider_dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 text-sm transition">
+          Overview
+        </a>
+        <a href="{% url 'provider_appointments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 font-medium text-sm transition">
+          Appointments
+        </a>
+        <a href="{% url 'provider_patients' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 text-sm transition">
+          Patients
+        </a>
+        <a href="{% url 'provider_messages' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 text-sm transition">
+          Messages
+        </a>
+        <a href="{% url 'provider_profile' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 text-sm transition">
+          My Profile
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 overflow-y-auto p-8 bg-slate-950">
+    <header class="mb-8">
+      <h1 class="text-2xl font-bold text-white">All Scheduled Appointments</h1>
+      <p class="text-xs text-slate-400">Manage patient booking requests and status updates.</p>
+    </header>
+
+    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <table class="w-full text-left text-xs text-slate-300">
+        <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+          <tr>
+            <th class="p-4">Patient</th>
+            <th class="p-4">Date & Time</th>
+            <th class="p-4">Status</th>
+            <th class="p-4">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800">
+          {% for appt in appointments %}
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="p-4 font-semibold text-white">
+                {{ appt.customer.user.get_full_name|default:appt.customer.user.username }}
+              </td>
+              <td class="p-4">{{ appt.appointment_date|date:"F d, Y - h:i A" }}</td>
+              <td class="p-4">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold
+                  {% if appt.status == 'Completed' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/30
+                  {% elif appt.status == 'Scheduled' %}bg-amber-500/10 text-amber-400 border border-amber-500/30
+                  {% else %}bg-slate-800 text-slate-400{% endif %}">
+                  {{ appt.status }}
+                </span>
+              </td>
+              <td class="p-4">
+                <form method="POST" action="{% url 'provider_appointments' %}" class="flex gap-2">
+                  {% csrf_token %}
+                  <input type="hidden" name="appointment_id" value="{{ appt.id }}">
+                  <button type="submit" name="status" value="Completed" class="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 px-2.5 py-1 rounded transition text-[11px]">
+                    Mark Complete
+                  </button>
+                  <button type="submit" name="status" value="Cancelled" class="bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 px-2.5 py-1 rounded transition text-[11px]">
+                    Cancel
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="p-6 text-center text-slate-500">No appointments scheduled.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+{% endblock %}
