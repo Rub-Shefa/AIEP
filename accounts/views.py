@@ -6,7 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
-from datetime import timedelta
+from django.urls import reverse
+from datetime import datetime, timedelta
 from .forms import CustomUserCreationForm
 from accounts.models import ProviderProfile, CustomerProfile, CourierProfile, SellerProfile
 from catalog.models import Category, Product, Appointment
@@ -216,10 +217,46 @@ def customer_dashboard_view(request):
     if query:
         products = products.filter(name__icontains=query)
 
+    # Browse Doctors — pulled straight from ProviderProfile, filterable by
+    # specialty and free-text search, nothing hardcoded.
+    doctors = ProviderProfile.objects.select_related('user').all().order_by('-experience_years')
+    specialties = (
+        ProviderProfile.objects.exclude(specialty='')
+        .order_by('specialty')
+        .values_list('specialty', flat=True)
+        .distinct()
+    )
+
+    selected_specialty = request.GET.get('specialty', '')
+    doctor_query = request.GET.get('doctor_q', '').strip()
+
+    if selected_specialty:
+        doctors = doctors.filter(specialty=selected_specialty)
+    if doctor_query:
+        doctors = doctors.filter(
+            Q(user__first_name__icontains=doctor_query)
+            | Q(user__last_name__icontains=doctor_query)
+            | Q(specialty__icontains=doctor_query)
+        )
+
     orders = (
         Order.objects.filter(customer=customer_profile)
         .prefetch_related('items__product')
         .order_by('-created_at')[:10]
+    )
+
+    # My Appointments — real bookings against the Appointment model, split
+    # into what's still coming up vs. what's already happened or was cancelled.
+    now = timezone.now()
+    all_appointments = (
+        Appointment.objects.filter(customer=customer_profile)
+        .select_related('provider__user')
+        .order_by('appointment_date')
+    )
+    upcoming_appointments = all_appointments.filter(status='Scheduled', appointment_date__gte=now)
+    past_appointments = (
+        all_appointments.exclude(status='Scheduled', appointment_date__gte=now)
+        .order_by('-appointment_date')[:10]
     )
 
     cart = Cart(request)
@@ -232,8 +269,95 @@ def customer_dashboard_view(request):
         'query': query,
         'cart_item_count': len(cart),
         'total_orders': Order.objects.filter(customer=customer_profile).count(),
+        'customer_profile': customer_profile,
+        'doctors': doctors,
+        'specialties': specialties,
+        'selected_specialty': selected_specialty,
+        'doctor_query': doctor_query,
+        'total_doctors': ProviderProfile.objects.count(),
+        'upcoming_appointments': upcoming_appointments,
+        'past_appointments': past_appointments,
+        'upcoming_appointments_count': upcoming_appointments.count(),
+        'today_str': now.strftime('%Y-%m-%d'),
     }
     return render(request, 'accounts/customer/customer_dashboard.html', context)
+
+
+@login_required
+def book_appointment_view(request, provider_id):
+    """Customer-side booking: creates a real Appointment row against the
+    chosen provider, with basic conflict and past-date checks."""
+    if request.method != 'POST':
+        return redirect('customer_dashboard')
+
+    customer_profile, _ = CustomerProfile.objects.get_or_create(user=request.user)
+    provider = get_object_or_404(ProviderProfile, id=provider_id)
+    redirect_target = f"{reverse('customer_dashboard')}#doctors"
+
+    date_str = request.POST.get('appointment_date', '').strip()
+    time_str = request.POST.get('appointment_time', '').strip()
+    reason = request.POST.get('reason_for_visit', '').strip()
+
+    if not date_str or not time_str:
+        messages.error(request, "Please choose both a date and a time for your appointment.")
+        return redirect(redirect_target)
+
+    try:
+        naive_dt = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+    except ValueError:
+        messages.error(request, "That date or time didn't look right — please try again.")
+        return redirect(redirect_target)
+
+    appointment_dt = timezone.make_aware(naive_dt, timezone.get_current_timezone())
+    doctor_name = provider.user.get_full_name() or provider.user.username
+
+    if appointment_dt < timezone.now():
+        messages.error(request, "You can't book an appointment in the past.")
+        return redirect(redirect_target)
+
+    slot_taken = Appointment.objects.filter(
+        provider=provider,
+        appointment_date=appointment_dt,
+        status='Scheduled',
+    ).exists()
+    if slot_taken:
+        messages.error(
+            request,
+            f"Dr. {doctor_name} already has a booking at that exact time. Please choose another slot."
+        )
+        return redirect(redirect_target)
+
+    Appointment.objects.create(
+        customer=customer_profile,
+        provider=provider,
+        appointment_date=appointment_dt,
+        reason_for_visit=reason,
+        status='Scheduled',
+    )
+    messages.success(
+        request,
+        f"Appointment booked with Dr. {doctor_name} on {appointment_dt.strftime('%b %d, %Y at %I:%M %p')}."
+    )
+    return redirect(f"{reverse('customer_dashboard')}#appointments")
+
+
+@login_required
+def cancel_appointment_view(request, appointment_id):
+    """Lets a customer cancel their own upcoming appointment."""
+    if request.method != 'POST':
+        return redirect('customer_dashboard')
+
+    customer_profile = getattr(request.user, 'customer_profile', None)
+    appointment = get_object_or_404(Appointment, id=appointment_id, customer=customer_profile)
+
+    if appointment.status == 'Scheduled':
+        appointment.status = 'Cancelled'
+        appointment.save(update_fields=['status'])
+        messages.success(request, "Your appointment has been cancelled.")
+    else:
+        messages.error(request, "This appointment can no longer be cancelled.")
+
+    return redirect(f"{reverse('customer_dashboard')}#appointments")
 
 @login_required
 def seller_dashboard_view(request):
@@ -271,11 +395,17 @@ def seller_dashboard_view(request):
     processing_orders_count = seller_orders_qs.filter(status='Processing').count()
     completed_orders_count = seller_orders_qs.filter(status='Completed').count()
 
+    # Order History filter — practical status filter so a seller with a long
+    # history can actually find what they're looking for.
+    order_status_filter = request.GET.get('order_status', '').strip()
+    if order_status_filter in dict(Order.STATUS_CHOICES):
+        seller_orders_qs = seller_orders_qs.filter(status=order_status_filter)
+
     posted_order_ids = set(
         DeliveryJobPosting.objects.filter(seller=seller_profile).values_list('order_id', flat=True)
     )
 
-    seller_orders = list(seller_orders_qs[:15])
+    seller_orders = list(seller_orders_qs[:20])
     for order in seller_orders:
         order.seller_items = [
             item for item in order.items.all() if item.product.seller_id == seller_profile.id
@@ -313,6 +443,8 @@ def seller_dashboard_view(request):
         'pending_orders_count': pending_orders_count,
         'processing_orders_count': processing_orders_count,
         'completed_orders_count': completed_orders_count,
+        'order_status_filter': order_status_filter,
+        'order_status_choices': Order.STATUS_CHOICES,
         'open_jobs': open_jobs,
         'assigned_jobs': assigned_jobs,
         'top_products': top_products,
@@ -553,6 +685,7 @@ def courier_dashboard_view(request):
     )
     active_deliveries = deliveries.exclude(status='Delivered')
     completed_deliveries = deliveries.filter(status='Delivered')
+    total_earnings = completed_deliveries.aggregate(total=Sum('job__offered_pay'))['total'] or 0
 
     context = {
         'courier_profile': courier_profile,
@@ -561,5 +694,6 @@ def courier_dashboard_view(request):
         'active_deliveries': active_deliveries,
         'completed_deliveries': completed_deliveries,
         'total_completed': completed_deliveries.count(),
+        'total_earnings': total_earnings,
     }
     return render(request, 'accounts/courier/courier_dashboard.html', context)
