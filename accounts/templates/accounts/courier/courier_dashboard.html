@@ -3,7 +3,7 @@
 {% block title %}Courier Portal · HealthFlow{% endblock %}
 
 {% block content %}
-<main class="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+<div class="mx-auto max-w-[1500px] px-5 py-10 sm:px-8">
 
   {% if messages %}
     <div class="mb-6 space-y-2">
@@ -19,175 +19,295 @@
     </div>
   {% endif %}
 
-  <!-- Header -->
-  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
-    <div>
-      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Courier Portal</p>
-      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">Welcome back, {{ user.first_name|default:user.username }}</h1>
-      <p class="mt-1 text-sm text-slate-500">
-        {{ courier_profile.vehicle_type|default:"Courier" }}
-        {% if courier_profile.service_zone %} · Serving {{ courier_profile.service_zone }}{% endif %}
-      </p>
-    </div>
-
-    <form method="post" class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="toggle_availability">
-      <span class="flex items-center gap-2 text-xs font-bold text-slate-600">
-        <span class="h-2.5 w-2.5 rounded-full {% if courier_profile.availability_status %} bg-emerald-500 {% else %} bg-slate-300 {% endif %}"></span>
-        {% if courier_profile.availability_status %}Available for jobs{% else %}Unavailable{% endif %}
-      </span>
-      <button type="submit"
-        class="rounded-xl px-4 py-2 text-xs font-extrabold transition
-          {% if courier_profile.availability_status %} bg-ink text-white hover:bg-rose-600 {% else %} bg-lime text-ink hover:bg-teal hover:text-white {% endif %}">
-        {% if courier_profile.availability_status %}Go Offline{% else %}Go Online{% endif %}
-      </button>
-    </form>
+  <!-- Mobile section nav (sidebar is hidden below lg) -->
+  <div class="mb-6 -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:hidden">
+    <a href="#overview" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">Overview</a>
+    <a href="#deliveries" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">Deliveries</a>
+    <a href="#open-jobs" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">Open Jobs</a>
+    <a href="#bids" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">My Bids</a>
+    <a href="#history" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">History</a>
   </div>
 
-  <!-- Stat strip -->
-  <div class="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[11px] uppercase text-slate-400">Open Jobs</p>
-      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ available_jobs|length }}</p>
-    </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[11px] uppercase text-slate-400">My Bids</p>
-      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ my_bids|length }}</p>
-    </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[11px] uppercase text-slate-400">Active Deliveries</p>
-      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ active_deliveries|length }}</p>
-    </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[11px] uppercase text-slate-400">Completed</p>
-      <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ total_completed }}</p>
-    </div>
-  </div>
+  <div class="flex items-start gap-8">
 
-  <!-- Active deliveries -->
-  <section class="mb-14">
-    <h2 class="mb-5 text-xl font-extrabold text-slate-900">Active Deliveries</h2>
-    {% if active_deliveries %}
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {% for delivery in active_deliveries %}
-          <div class="rounded-2xl border border-slate-200 bg-white p-5">
-            <div class="mb-3 flex items-center justify-between">
-              <p class="font-mono text-xs font-bold text-slate-900">Delivery #{{ delivery.id }} · Order #{{ delivery.job.order.id }}</p>
-              <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
-                {% if delivery.status == 'Assigned' %} bg-slate-100 text-slate-600
-                {% elif delivery.status == 'Picked Up' %} bg-amber-100 text-amber-700
-                {% else %} bg-teal/10 text-teal {% endif %}">
-                {{ delivery.status }}
-              </span>
+    <!-- ============= SIDEBAR ============= -->
+    <aside class="sticky top-[96px] hidden w-72 shrink-0 self-start lg:block">
+      <div class="overflow-hidden rounded-3xl border border-slate-800 bg-ink text-white shadow-xl">
+
+        <!-- Profile block -->
+        <div class="border-b border-slate-800 p-6">
+          <div class="flex items-center gap-3">
+            <img src="https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username|urlencode }}&background=D9FF5D&color=0B1620&bold=true"
+                 alt="{{ user.get_full_name|default:user.username }}"
+                 class="h-12 w-12 rounded-full border border-slate-700 object-cover">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-extrabold text-white">{{ user.get_full_name|default:user.username }}</p>
+              <p class="truncate text-xs text-slate-400">{{ courier_profile.vehicle_type|default:"Courier" }}</p>
             </div>
-            <div class="space-y-1.5 text-sm text-slate-600">
-              <p><span class="font-bold text-slate-800">Pickup:</span> {{ delivery.job.pickup_address }}</p>
-              <p><span class="font-bold text-slate-800">Drop-off:</span> {{ delivery.job.delivery_address }}</p>
-              <p><span class="font-bold text-slate-800">Pay:</span> ${{ delivery.job.offered_pay }}</p>
-            </div>
-            <form method="post" action="{% url 'advance_delivery_status' delivery.id %}" class="mt-4">
-              {% csrf_token %}
-              <button type="submit" class="w-full rounded-xl bg-ink px-4 py-2.5 text-xs font-extrabold text-white hover:bg-teal">
-                {% if delivery.status == 'Assigned' %} Mark as Picked Up
-                {% elif delivery.status == 'Picked Up' %} Mark as In Transit
-                {% else %} Mark as Delivered {% endif %}
-              </button>
-            </form>
           </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center">
-        <p class="text-sm text-slate-500">No active deliveries right now. Win a bid below to get rolling.</p>
-      </div>
-    {% endif %}
-  </section>
+          {% if courier_profile.service_zone %}
+            <p class="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
+              <svg class="h-3.5 w-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              Serving {{ courier_profile.service_zone }}
+            </p>
+          {% endif %}
 
-  <!-- Open jobs to bid on -->
-  <section class="mb-14">
-    <h2 class="mb-5 text-xl font-extrabold text-slate-900">Open Delivery Jobs</h2>
-    {% if available_jobs %}
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {% for job in available_jobs %}
-          <div class="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5">
-            <div>
-              <div class="mb-3 flex items-center justify-between">
-                <p class="font-mono text-xs font-bold text-slate-900">Job #{{ job.id }}</p>
-                <span class="rounded-full bg-lime/40 px-2.5 py-1 text-[11px] font-extrabold text-ink">${{ job.offered_pay }}</span>
-              </div>
-              <div class="space-y-1.5 text-sm text-slate-600">
-                <p><span class="font-bold text-slate-800">Seller:</span> {{ job.seller.store_name }}</p>
-                <p><span class="font-bold text-slate-800">Pickup:</span> {{ job.pickup_address }}</p>
-                <p><span class="font-bold text-slate-800">Drop-off:</span> {{ job.delivery_address }}</p>
-              </div>
-            </div>
-            <form method="post" action="{% url 'place_bid' job.id %}" class="mt-4 flex items-center gap-2">
-              {% csrf_token %}
-              <input type="number" step="0.01" min="0.01" name="bid_amount" placeholder="Your bid"
-                     class="w-24 rounded-lg border border-slate-300 px-2 py-2 text-xs focus:border-teal focus:outline-none" required>
-              <button type="submit" class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-extrabold text-white hover:bg-teal-600">
-                Place Bid
-              </button>
-            </form>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center">
-        <p class="text-sm text-slate-500">No open delivery jobs at the moment. Check back soon.</p>
-      </div>
-    {% endif %}
-  </section>
+          <!-- Availability toggle -->
+          <form method="post" class="mt-4 flex items-center justify-between gap-2 rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_availability">
+            <span class="flex items-center gap-2 text-xs font-bold text-slate-200">
+              <span class="h-2.5 w-2.5 rounded-full {% if courier_profile.availability_status %} bg-emerald-500 {% else %} bg-slate-500 {% endif %}"></span>
+              {% if courier_profile.availability_status %}Available{% else %}Unavailable{% endif %}
+            </span>
+            <button type="submit"
+              class="rounded-lg px-3 py-1.5 text-[11px] font-extrabold transition
+                {% if courier_profile.availability_status %} bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white {% else %} bg-lime text-ink hover:bg-teal hover:text-white {% endif %}">
+              {% if courier_profile.availability_status %}Go Offline{% else %}Go Online{% endif %}
+            </button>
+          </form>
+        </div>
 
-  <!-- My bids -->
-  <section>
-    <h2 class="mb-5 text-xl font-extrabold text-slate-900">My Bids</h2>
-    {% if my_bids %}
-      <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-            <tr>
-              <th class="px-5 py-3 font-bold">Job</th>
-              <th class="px-5 py-3 font-bold">Route</th>
-              <th class="px-5 py-3 font-bold">My Bid</th>
-              <th class="px-5 py-3 font-bold">Status</th>
-              <th class="px-5 py-3 font-bold"></th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            {% for bid in my_bids %}
-              <tr class="hover:bg-slate-50/60">
-                <td class="px-5 py-3 font-mono text-xs font-bold text-slate-900">#{{ bid.job.id }}</td>
-                <td class="px-5 py-3 text-slate-600">{{ bid.job.pickup_address|truncatechars:20 }} → {{ bid.job.delivery_address|truncatechars:20 }}</td>
-                <td class="px-5 py-3 font-bold text-slate-900">${{ bid.bid_amount }}</td>
-                <td class="px-5 py-3">
+        <!-- Section nav -->
+        <nav class="space-y-1 p-4">
+          <p class="px-3 pb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">Dashboard</p>
+          <a href="#overview" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            Overview
+          </a>
+          <a href="#deliveries" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 17H7m6 0V7a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V17h-2m-6 0h6"/></svg>
+            Active Deliveries
+            {% if active_deliveries|length %}
+              <span class="ml-auto rounded-full bg-lime px-2 py-0.5 text-[10px] font-extrabold text-ink">{{ active_deliveries|length }}</span>
+            {% endif %}
+          </a>
+          <a href="#open-jobs" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            Open Jobs
+          </a>
+          <a href="#bids" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            My Bids
+          </a>
+          <a href="#history" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Delivery History
+            {% if total_completed %}
+              <span class="ml-auto rounded-full bg-lime px-2 py-0.5 text-[10px] font-extrabold text-ink">{{ total_completed }}</span>
+            {% endif %}
+          </a>
+        </nav>
+
+        <!-- Quick actions -->
+        <div class="space-y-2 border-t border-slate-800 p-4">
+          <p class="px-3 pb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">Quick Actions</p>
+          {% if user.is_staff or user.is_superuser %}
+            <a href="{% url 'admin_dashboard' %}" class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-teal hover:text-white">
+              ← Admin Hub
+            </a>
+          {% endif %}
+          <a href="{% url 'logout' %}" class="flex items-center justify-between rounded-xl border border-rose-500/30 bg-rose-600/10 px-3 py-2.5 text-sm font-bold text-rose-300 transition hover:bg-rose-600 hover:text-white">
+            Sign Out
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============= MAIN CONTENT ============= -->
+    <main class="min-w-0 flex-1">
+
+      <!-- Header -->
+      <div id="overview" class="mb-8 scroll-mt-28">
+        <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Courier Portal</p>
+        <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+          Welcome back, <span class="bg-gradient-to-r from-teal via-emerald-500 to-lime bg-clip-text text-transparent">{{ user.first_name|default:user.username }}</span>
+        </h1>
+        <p class="mt-1 text-sm text-slate-500">Bid on delivery jobs, run your active routes, and track what you've completed.</p>
+      </div>
+
+      <!-- Stat strip -->
+      <div class="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div class="rounded-2xl border border-slate-200 bg-white p-5">
+          <p class="font-mono text-[11px] uppercase text-slate-400">Open Jobs</p>
+          <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ available_jobs|length }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-5">
+          <p class="font-mono text-[11px] uppercase text-slate-400">My Bids</p>
+          <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ my_bids|length }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-5">
+          <p class="font-mono text-[11px] uppercase text-slate-400">Active Deliveries</p>
+          <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ active_deliveries|length }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-5">
+          <p class="font-mono text-[11px] uppercase text-slate-400">Completed</p>
+          <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ total_completed }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-5">
+          <p class="font-mono text-[11px] uppercase text-slate-400">Total Earnings</p>
+          <p class="mt-1 text-2xl font-extrabold text-slate-900">${{ total_earnings|floatformat:2 }}</p>
+        </div>
+      </div>
+
+      <!-- ============= ACTIVE DELIVERIES ============= -->
+      <section id="deliveries" class="scroll-mt-28">
+        <h2 class="mb-5 text-xl font-extrabold text-slate-900">Active Deliveries</h2>
+        {% if active_deliveries %}
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {% for delivery in active_deliveries %}
+              <div class="rounded-2xl border border-slate-200 bg-white p-5">
+                <div class="mb-3 flex items-center justify-between">
+                  <p class="font-mono text-xs font-bold text-slate-900">Delivery #{{ delivery.id }} · Order #{{ delivery.job.order.id }}</p>
                   <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
-                    {% if bid.status == 'Accepted' %} bg-emerald-100 text-emerald-700
-                    {% elif bid.status == 'Rejected' %} bg-rose-100 text-rose-700
-                    {% else %} bg-amber-100 text-amber-700 {% endif %}">
-                    {{ bid.status }}
+                    {% if delivery.status == 'Assigned' %} bg-slate-100 text-slate-600
+                    {% elif delivery.status == 'Picked Up' %} bg-amber-100 text-amber-700
+                    {% else %} bg-teal/10 text-teal {% endif %}">
+                    {{ delivery.status }}
                   </span>
-                </td>
-                <td class="px-5 py-3 text-right">
-                  {% if bid.status == 'Pending' %}
-                    <form method="post" action="{% url 'withdraw_bid' bid.id %}">
-                      {% csrf_token %}
-                      <button type="submit" class="text-xs font-bold text-rose-600 hover:underline">Withdraw</button>
-                    </form>
-                  {% endif %}
-                </td>
-              </tr>
+                </div>
+                <div class="space-y-1.5 text-sm text-slate-600">
+                  <p><span class="font-bold text-slate-800">Pickup:</span> {{ delivery.job.pickup_address }}</p>
+                  <p><span class="font-bold text-slate-800">Drop-off:</span> {{ delivery.job.delivery_address }}</p>
+                  <p><span class="font-bold text-slate-800">Pay:</span> ${{ delivery.job.offered_pay }}</p>
+                </div>
+                <form method="post" action="{% url 'advance_delivery_status' delivery.id %}" class="mt-4">
+                  {% csrf_token %}
+                  <button type="submit" class="w-full rounded-xl bg-ink px-4 py-2.5 text-xs font-extrabold text-white hover:bg-teal">
+                    {% if delivery.status == 'Assigned' %} Mark as Picked Up
+                    {% elif delivery.status == 'Picked Up' %} Mark as In Transit
+                    {% else %} Mark as Delivered {% endif %}
+                  </button>
+                </form>
+              </div>
             {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
-        <p class="text-sm text-slate-500">You haven't placed any bids yet.</p>
-      </div>
-    {% endif %}
-  </section>
+          </div>
+        {% else %}
+          <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center">
+            <p class="text-sm text-slate-500">No active deliveries right now. Win a bid below to get rolling.</p>
+          </div>
+        {% endif %}
+      </section>
 
-</main>
+      <!-- ============= OPEN JOBS TO BID ON ============= -->
+      <section id="open-jobs" class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10">
+        <h2 class="mb-5 text-xl font-extrabold text-slate-900">Open Delivery Jobs</h2>
+        {% if available_jobs %}
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {% for job in available_jobs %}
+              <div class="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5">
+                <div>
+                  <div class="mb-3 flex items-center justify-between">
+                    <p class="font-mono text-xs font-bold text-slate-900">Job #{{ job.id }}</p>
+                    <span class="rounded-full bg-lime/40 px-2.5 py-1 text-[11px] font-extrabold text-ink">${{ job.offered_pay }}</span>
+                  </div>
+                  <div class="space-y-1.5 text-sm text-slate-600">
+                    <p><span class="font-bold text-slate-800">Seller:</span> {{ job.seller.store_name }}</p>
+                    <p><span class="font-bold text-slate-800">Pickup:</span> {{ job.pickup_address }}</p>
+                    <p><span class="font-bold text-slate-800">Drop-off:</span> {{ job.delivery_address }}</p>
+                  </div>
+                </div>
+                <form method="post" action="{% url 'place_bid' job.id %}" class="mt-4 flex items-center gap-2">
+                  {% csrf_token %}
+                  <input type="number" step="0.01" min="0.01" name="bid_amount" placeholder="Your bid"
+                         class="w-24 rounded-lg border border-slate-300 px-2 py-2 text-xs focus:border-teal focus:outline-none" required>
+                  <button type="submit" class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-extrabold text-white hover:bg-teal-600">
+                    Place Bid
+                  </button>
+                </form>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center">
+            <p class="text-sm text-slate-500">No open delivery jobs at the moment. Check back soon.</p>
+          </div>
+        {% endif %}
+      </section>
+
+      <!-- ============= MY BIDS ============= -->
+      <section id="bids" class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10">
+        <h2 class="mb-5 text-xl font-extrabold text-slate-900">My Bids</h2>
+        {% if my_bids %}
+          <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th class="px-5 py-3 font-bold">Job</th>
+                  <th class="px-5 py-3 font-bold">Route</th>
+                  <th class="px-5 py-3 font-bold">My Bid</th>
+                  <th class="px-5 py-3 font-bold">Status</th>
+                  <th class="px-5 py-3 font-bold"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {% for bid in my_bids %}
+                  <tr class="hover:bg-slate-50/60">
+                    <td class="px-5 py-3 font-mono text-xs font-bold text-slate-900">#{{ bid.job.id }}</td>
+                    <td class="px-5 py-3 text-slate-600">{{ bid.job.pickup_address|truncatechars:20 }} → {{ bid.job.delivery_address|truncatechars:20 }}</td>
+                    <td class="px-5 py-3 font-bold text-slate-900">${{ bid.bid_amount }}</td>
+                    <td class="px-5 py-3">
+                      <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
+                        {% if bid.status == 'Accepted' %} bg-emerald-100 text-emerald-700
+                        {% elif bid.status == 'Rejected' %} bg-rose-100 text-rose-700
+                        {% else %} bg-amber-100 text-amber-700 {% endif %}">
+                        {{ bid.status }}
+                      </span>
+                    </td>
+                    <td class="px-5 py-3 text-right">
+                      {% if bid.status == 'Pending' %}
+                        <form method="post" action="{% url 'withdraw_bid' bid.id %}">
+                          {% csrf_token %}
+                          <button type="submit" class="text-xs font-bold text-rose-600 hover:underline">Withdraw</button>
+                        </form>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
+            <p class="text-sm text-slate-500">You haven't placed any bids yet.</p>
+          </div>
+        {% endif %}
+      </section>
+
+      <!-- ============= DELIVERY HISTORY ============= -->
+      <section id="history" class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10">
+        <h2 class="mb-5 text-xl font-extrabold text-slate-900">Delivery History</h2>
+        {% if completed_deliveries %}
+          <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th class="px-5 py-3 font-bold">Delivery</th>
+                  <th class="px-5 py-3 font-bold">Route</th>
+                  <th class="px-5 py-3 font-bold">Pay</th>
+                  <th class="px-5 py-3 font-bold">Completed</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {% for delivery in completed_deliveries %}
+                  <tr class="hover:bg-slate-50/60">
+                    <td class="px-5 py-3 font-mono text-xs font-bold text-slate-900">#{{ delivery.id }} · Order #{{ delivery.job.order.id }}</td>
+                    <td class="px-5 py-3 text-slate-600">{{ delivery.job.pickup_address|truncatechars:20 }} → {{ delivery.job.delivery_address|truncatechars:20 }}</td>
+                    <td class="px-5 py-3 font-bold text-slate-900">${{ delivery.job.offered_pay }}</td>
+                    <td class="px-5 py-3 text-slate-500">{{ delivery.updated_at|date:"M d, Y · g:i A" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
+            <p class="text-sm text-slate-500">No completed deliveries yet — they'll show up here once you finish a route.</p>
+          </div>
+        {% endif %}
+      </section>
+
+    </main>
+  </div>
+</div>
 {% endblock %}
