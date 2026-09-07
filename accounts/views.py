@@ -100,6 +100,8 @@ def logout_view(request):
 @user_passes_test(is_admin)
 def admin_dashboard_view(request):
     from ai_communication.models import AIQueryLog
+    from django.db.models.functions import TruncDate
+    import json
 
     now = timezone.now()
     week_ago = now - timedelta(days=7)
@@ -150,6 +152,51 @@ def admin_dashboard_view(request):
         .order_by('-units_sold')[:6]
     )
 
+    # ---- Real, DB-driven chart data (no hardcoded numbers) ----
+
+    # 1. Orders & revenue trend for the last 7 days
+    today = timezone.localdate()
+    start_date = today - timedelta(days=6)
+    daily_rows = (
+        Order.objects.filter(created_at__date__gte=start_date)
+        .annotate(day=TruncDate('created_at'))
+        .values('day')
+        .annotate(order_count=Count('id'), revenue=Sum('total'))
+        .order_by('day')
+    )
+    daily_map = {row['day']: row for row in daily_rows}
+    trend_labels, trend_order_counts, trend_revenue = [], [], []
+    for i in range(7):
+        d = start_date + timedelta(days=i)
+        trend_labels.append(d.strftime('%a'))
+        row = daily_map.get(d)
+        trend_order_counts.append(row['order_count'] if row else 0)
+        trend_revenue.append(float(row['revenue']) if row and row['revenue'] else 0.0)
+
+    # 2. New user signups for the last 7 days
+    daily_user_rows = (
+        User.objects.filter(date_joined__date__gte=start_date)
+        .annotate(day=TruncDate('date_joined'))
+        .values('day')
+        .annotate(signup_count=Count('id'))
+        .order_by('day')
+    )
+    daily_user_map = {row['day']: row['signup_count'] for row in daily_user_rows}
+    signup_counts = [daily_user_map.get(start_date + timedelta(days=i), 0) for i in range(7)]
+
+    # 3. Order status breakdown (donut)
+    order_status_labels = ['Pending', 'Processing', 'Completed', 'Cancelled']
+    order_status_values = [pending_orders, processing_orders, completed_orders, cancelled_orders]
+
+    # 4. User role breakdown (donut)
+    role_labels = ['Customers', 'Sellers', 'Providers', 'Couriers']
+    role_values = [total_customers, total_sellers, total_providers, total_couriers]
+
+    # 5. Top products (bar)
+    top_products_list = list(top_products)
+    top_product_labels = [p['product__name'] for p in top_products_list]
+    top_product_units = [p['units_sold'] for p in top_products_list]
+
     role_filter = request.GET.get('role', '')
     users_qs = User.objects.select_related(
         'customer_profile', 'seller_profile', 'provider_profile', 'courier_profile'
@@ -199,6 +246,18 @@ def admin_dashboard_view(request):
         'top_products': top_products,
         'all_users_with_roles': all_users_with_roles,
         'role_filter': role_filter,
+        # Chart data, pre-serialized to JSON so the template can drop it
+        # straight into <script> without extra template-side formatting.
+        'trend_labels_json': json.dumps(trend_labels),
+        'trend_order_counts_json': json.dumps(trend_order_counts),
+        'trend_revenue_json': json.dumps(trend_revenue),
+        'signup_counts_json': json.dumps(signup_counts),
+        'order_status_labels_json': json.dumps(order_status_labels),
+        'order_status_values_json': json.dumps(order_status_values),
+        'role_labels_json': json.dumps(role_labels),
+        'role_values_json': json.dumps(role_values),
+        'top_product_labels_json': json.dumps(top_product_labels),
+        'top_product_units_json': json.dumps(top_product_units),
     }
     return render(request, 'accounts/admin/admin_dashboard.html', context)
 
