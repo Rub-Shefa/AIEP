@@ -1,239 +1,581 @@
 {% extends "accounts/base.html" %}
 
-{% block title %}Admin Control Hub · HealthFlow{% endblock %}
+{% block title %}Admin Command Center · HealthFlow{% endblock %}
 
 {% block content %}
-<main class="mx-auto max-w-7xl px-5 py-10 sm:px-8">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  {% if messages %}
-    <div class="mb-6 space-y-2">
-      {% for message in messages %}
-        <div class="rounded-xl border px-4 py-3 text-sm font-medium
-          {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700
-          {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal
-          {% elif message.tags == 'warning' %} border-amber-200 bg-amber-50 text-amber-700
-          {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    </div>
-  {% endif %}
+<div class="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
 
-  <!-- Header -->
-  <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+  <!-- ============= SIDEBAR ============= -->
+  <aside class="hidden w-64 shrink-0 flex-col justify-between border-r border-slate-800 bg-slate-900 p-4 lg:flex">
     <div>
-      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Administrative Portal</p>
-      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">Control Hub</h1>
-      <p class="mt-1 text-sm text-slate-500">Platform-wide activity, revenue, and operations at a glance.</p>
+      <!-- Brand -->
+      <div class="mb-6 flex items-center gap-3 px-2 py-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 font-bold text-white shadow-lg shadow-cyan-500/30">
+          +
+        </div>
+        <div>
+          <h2 class="text-lg font-bold leading-none tracking-wide text-white">AIEP Health</h2>
+          <span class="text-xs font-medium uppercase tracking-wider text-cyan-400">Admin Suite</span>
+        </div>
+      </div>
+
+      <!-- Section nav -->
+      <nav class="space-y-1">
+        <a href="#overview" class="flex items-center gap-3 rounded-lg bg-cyan-500/10 px-3 py-2.5 text-sm font-medium text-cyan-400 transition">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          Overview
+        </a>
+        <a href="#analytics" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-slate-200">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Analytics
+        </a>
+        <a href="#orders" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-slate-200">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          Orders
+          {% if pending_orders %}
+            <span class="ml-auto rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-extrabold text-slate-950">{{ pending_orders }}</span>
+          {% endif %}
+        </a>
+        <a href="#users" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-slate-200">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          Users
+        </a>
+        <a href="#products" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-slate-200">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          Inventory
+          {% if low_stock_count %}
+            <span class="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-extrabold text-white">{{ low_stock_count }}</span>
+          {% endif %}
+        </a>
+        <a href="#deliveries" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-slate-200">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 17H7m6 0V7a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V17h-2m-6 0h6"/></svg>
+          Deliveries
+        </a>
+      </nav>
     </div>
-    <div class="flex flex-wrap items-center gap-3">
-      <a href="{% url 'customer_dashboard' %}" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">
+
+    <!-- Quick actions + profile -->
+    <div class="space-y-3 border-t border-slate-800 pt-4">
+      <a href="{% url 'customer_dashboard' %}" class="flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-cyan-500 hover:text-cyan-400">
         Storefront View
       </a>
-      <a href="/admin/" target="_blank" class="rounded-xl bg-ink px-4 py-2.5 text-xs font-extrabold text-white hover:bg-teal">
+      <a href="/admin/" target="_blank" class="flex items-center justify-center rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-2 text-xs font-bold text-white shadow-lg shadow-cyan-500/20 transition hover:from-cyan-400 hover:to-blue-500">
         Django Admin →
       </a>
-    </div>
-  </div>
-
-  <!-- Top-line stat cards -->
-  <div class="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Revenue (Completed)</p>
-      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">${{ total_revenue|floatformat:2 }}</p>
-      <p class="mt-1 text-xs text-slate-500">{{ completed_orders }} completed order{{ completed_orders|pluralize }}</p>
-    </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Total Orders</p>
-      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">{{ total_orders }}</p>
-      <p class="mt-1 text-xs text-slate-500">{{ pending_orders }} pending · {{ processing_orders }} processing</p>
-    </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Total Users</p>
-      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">{{ total_users }}</p>
-      <p class="mt-1 text-xs text-slate-500">+{{ new_users_week }} in the last 7 days</p>
-    </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Products Listed</p>
-      <p class="mt-2 text-2xl font-extrabold tracking-tight text-ink">{{ total_products }}</p>
-      <p class="mt-1 text-xs {% if low_stock_count %}text-amber-600{% else %}text-slate-500{% endif %}">{{ low_stock_count }} low on stock (≤5)</p>
-    </div>
-  </div>
-
-  <!-- Secondary stat cards -->
-  <div class="mb-10 grid grid-cols-2 gap-4 md:grid-cols-4">
-    <div class="rounded-2xl border border-slate-200 bg-ink p-5 text-white">
-      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-lime">User Breakdown</p>
-      <div class="mt-2 space-y-1 text-xs">
-        <div class="flex justify-between"><span class="text-slate-300">Customers</span><span class="font-bold">{{ total_customers }}</span></div>
-        <div class="flex justify-between"><span class="text-slate-300">Sellers</span><span class="font-bold">{{ total_sellers }}</span></div>
-        <div class="flex justify-between"><span class="text-slate-300">Providers</span><span class="font-bold">{{ total_providers }}</span></div>
-        <div class="flex justify-between"><span class="text-slate-300">Couriers</span><span class="font-bold">{{ total_couriers }}</span></div>
-      </div>
-    </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Delivery Pipeline</p>
-      <div class="mt-2 space-y-1 text-xs text-slate-600">
-        <div class="flex justify-between"><span>Open job postings</span><span class="font-bold text-ink">{{ open_delivery_jobs }}</span></div>
-        <div class="flex justify-between"><span>Active deliveries</span><span class="font-bold text-ink">{{ active_deliveries }}</span></div>
-        <div class="flex justify-between"><span>Completed deliveries</span><span class="font-bold text-ink">{{ completed_deliveries }}</span></div>
-      </div>
-    </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">Order Status</p>
-      <div class="mt-2 space-y-1 text-xs text-slate-600">
-        <div class="flex justify-between"><span>Completed</span><span class="font-bold text-ink">{{ completed_orders }}</span></div>
-        <div class="flex justify-between"><span>Processing</span><span class="font-bold text-ink">{{ processing_orders }}</span></div>
-        <div class="flex justify-between"><span>Pending</span><span class="font-bold text-ink">{{ pending_orders }}</span></div>
-        <div class="flex justify-between"><span>Cancelled</span><span class="font-bold text-ink">{{ cancelled_orders }}</span></div>
-      </div>
-    </div>
-    <div class="rounded-2xl border border-slate-200 bg-white p-5">
-      <p class="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-teal">AI Assistant Health</p>
-      <div class="mt-2 space-y-1 text-xs text-slate-600">
-        <div class="flex justify-between"><span>Total queries logged</span><span class="font-bold text-ink">{{ ai_logs_total }}</span></div>
-        <div class="flex justify-between"><span>Fallback rate</span><span class="font-bold {% if ai_fallback_rate > 20 %}text-rose-600{% else %}text-ink{% endif %}">{{ ai_fallback_rate }}%</span></div>
-        <div class="flex justify-between"><span>Upcoming appointments</span><span class="font-bold text-ink">{{ upcoming_appointments }}</span></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="grid gap-6 lg:grid-cols-3">
-    <!-- Recent Orders -->
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 lg:col-span-2">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-extrabold tracking-tight text-ink">Recent Orders</h2>
-        <span class="font-mono text-[10px] uppercase tracking-widest text-slate-400">Last 8</span>
-      </div>
-      {% if recent_orders %}
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead>
-              <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
-                <th class="pb-2 pr-3 font-semibold">Order</th>
-                <th class="pb-2 pr-3 font-semibold">Customer</th>
-                <th class="pb-2 pr-3 font-semibold">Total</th>
-                <th class="pb-2 pr-3 font-semibold">Status</th>
-                <th class="pb-2 font-semibold">Placed</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              {% for order in recent_orders %}
-                <tr>
-                  <td class="py-2.5 pr-3 font-mono text-xs text-slate-500">#{{ order.id }}</td>
-                  <td class="py-2.5 pr-3 font-medium text-ink">{{ order.customer.user.username }}</td>
-                  <td class="py-2.5 pr-3 font-semibold text-ink">${{ order.total|floatformat:2 }}</td>
-                  <td class="py-2.5 pr-3">
-                    <span class="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide
-                      {% if order.status == 'Completed' %} bg-teal/10 text-teal
-                      {% elif order.status == 'Processing' %} bg-amber-100 text-amber-700
-                      {% elif order.status == 'Cancelled' %} bg-rose-100 text-rose-700
-                      {% else %} bg-slate-100 text-slate-600 {% endif %}">
-                      {{ order.status }}
-                    </span>
-                  </td>
-                  <td class="py-2.5 text-xs text-slate-500">{{ order.created_at|date:"M j, Y" }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+      <div class="flex items-center justify-between border-t border-slate-800 pt-3">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-sm font-semibold text-cyan-400">
+            {{ user.username|slice:":2"|upper }}
+          </div>
+          <div class="truncate">
+            <p class="truncate text-xs font-semibold text-slate-200">{{ user.get_full_name|default:user.username }}</p>
+            <p class="text-[10px] text-slate-500">Administrator</p>
+          </div>
         </div>
-      {% else %}
-        <p class="text-sm text-slate-500">No orders yet.</p>
-      {% endif %}
-    </div>
-
-    <!-- Top Products -->
-    <div class="rounded-2xl border border-slate-200 bg-white p-6">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-extrabold tracking-tight text-ink">Top Products</h2>
-        <span class="font-mono text-[10px] uppercase tracking-widest text-slate-400">By units sold</span>
+        <a href="{% url 'logout' %}" title="Sign out" class="shrink-0 rounded-lg p-2 text-slate-500 transition hover:bg-rose-600/20 hover:text-rose-400">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </a>
       </div>
-      {% if top_products %}
-        <ul class="space-y-3">
-          {% for p in top_products %}
-            <li class="flex items-center justify-between border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-              <div>
-                <p class="text-sm font-semibold text-ink">{{ p.product__name }}</p>
-                <p class="text-xs text-slate-500">{{ p.units_sold }} sold · stock {{ p.product__stock }}</p>
-              </div>
-              <p class="font-mono text-sm font-bold text-teal">${{ p.revenue|floatformat:2 }}</p>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="text-sm text-slate-500">No sales recorded yet.</p>
-      {% endif %}
     </div>
-  </div>
+  </aside>
 
-  {% if low_stock_products %}
-  <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-6">
-    <h2 class="mb-3 text-sm font-extrabold uppercase tracking-wide text-amber-700">⚠ Low Stock Alert</h2>
-    <div class="flex flex-wrap gap-2">
-      {% for product in low_stock_products %}
-        <span class="rounded-full border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800">
-          {{ product.name }} — {{ product.stock }} left
-        </span>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
+  <!-- ============= MAIN CONTENT ============= -->
+  <main class="flex-1 overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 p-5 sm:p-8">
 
-  
-  <!-- User Management -->
-  <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h2 class="text-lg font-extrabold tracking-tight text-ink">User Management</h2>
-      <form method="get" class="flex items-center gap-2">
-        <select name="role" onchange="this.form.submit()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 focus:border-teal focus:outline-none">
-          <option value="" {% if not role_filter %}selected{% endif %}>All Roles</option>
-          <option value="Admin" {% if role_filter == 'Admin' %}selected{% endif %}>Admin</option>
-          <option value="Customer" {% if role_filter == 'Customer' %}selected{% endif %}>Customer</option>
-          <option value="Seller" {% if role_filter == 'Seller' %}selected{% endif %}>Seller</option>
-          <option value="Provider" {% if role_filter == 'Provider' %}selected{% endif %}>Provider</option>
-          <option value="Courier" {% if role_filter == 'Courier' %}selected{% endif %}>Courier</option>
-        </select>
-      </form>
-    </div>
-    {% if all_users_with_roles %}
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead>
-            <tr class="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
-              <th class="pb-2 pr-3 font-semibold">Username</th>
-              <th class="pb-2 pr-3 font-semibold">Email</th>
-              <th class="pb-2 pr-3 font-semibold">Role</th>
-              <th class="pb-2 pr-3 font-semibold">Joined</th>
-              <th class="pb-2 font-semibold">Status</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            {% for row in all_users_with_roles %}
-              <tr>
-                <td class="py-2.5 pr-3 font-medium text-ink">{{ row.user.username }}</td>
-                <td class="py-2.5 pr-3 text-slate-500">{{ row.user.email|default:"—" }}</td>
-                <td class="py-2.5 pr-3">
-                  <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600">{{ row.role }}</span>
-                </td>
-                <td class="py-2.5 pr-3 text-xs text-slate-500">{{ row.user.date_joined|date:"M j, Y" }}</td>
-                <td class="py-2.5">
-                  {% if row.user.is_active %}
-                    <span class="text-xs font-bold text-teal">Active</span>
-                  {% else %}
-                    <span class="text-xs font-bold text-rose-500">Disabled</span>
-                  {% endif %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    {% if messages %}
+      <div class="mb-6 space-y-2">
+        {% for message in messages %}
+          <div class="rounded-xl border px-4 py-3 text-sm font-medium
+            {% if message.tags == 'error' %} border-rose-500/30 bg-rose-500/10 text-rose-300
+            {% elif message.tags == 'success' %} border-emerald-500/30 bg-emerald-500/10 text-emerald-300
+            {% elif message.tags == 'warning' %} border-amber-500/30 bg-amber-500/10 text-amber-300
+            {% else %} border-slate-700 bg-slate-800/60 text-slate-300 {% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
       </div>
-    {% else %}
-      <p class="text-sm text-slate-500">No users match this filter.</p>
     {% endif %}
-    <p class="mt-4 text-xs text-slate-400">For editing permissions, resetting passwords, or deleting accounts, use the <a href="/admin/" target="_blank" class="font-semibold text-teal underline">Django Admin</a>.</p>
-  </div>
 
-</main>
+    <!-- Mobile section nav -->
+    <div class="mb-6 -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:hidden">
+      <a href="#overview" class="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-xs font-bold text-slate-300">Overview</a>
+      <a href="#analytics" class="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-xs font-bold text-slate-300">Analytics</a>
+      <a href="#orders" class="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-xs font-bold text-slate-300">Orders</a>
+      <a href="#users" class="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-xs font-bold text-slate-300">Users</a>
+      <a href="#products" class="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-xs font-bold text-slate-300">Inventory</a>
+      <a href="#deliveries" class="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-xs font-bold text-slate-300">Deliveries</a>
+    </div>
+
+    <!-- HEADER -->
+    <header id="overview" class="mb-8 flex scroll-mt-6 flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-white">Admin Command Center</h1>
+        <p class="text-xs text-slate-400">Platform-wide analytics, revenue, and operations at a glance.</p>
+      </div>
+      <div class="flex items-center gap-2 self-start rounded-full border border-slate-800 bg-slate-900 px-3 py-1.5 md:self-auto">
+        <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500"></span>
+        <span class="text-xs font-medium text-emerald-400">Platform Operational</span>
+      </div>
+    </header>
+
+    <!-- METRIC CARDS -->
+    <div class="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5 backdrop-blur-md">
+        <div class="mb-2 flex items-start justify-between">
+          <span class="text-xs font-medium text-slate-400">Revenue (Completed)</span>
+          <span class="rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">Live</span>
+        </div>
+        <h3 class="mb-1 text-2xl font-bold text-white">${{ total_revenue|floatformat:2 }}</h3>
+        <p class="text-[11px] text-slate-500">{{ completed_orders }} completed order{{ completed_orders|pluralize }}</p>
+      </div>
+      <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5 backdrop-blur-md">
+        <div class="mb-2 flex items-start justify-between">
+          <span class="text-xs font-medium text-slate-400">Total Orders</span>
+          <span class="rounded bg-cyan-500/10 px-2 py-0.5 text-xs font-medium text-cyan-400">{{ pending_orders }} pending</span>
+        </div>
+        <h3 class="mb-1 text-2xl font-bold text-white">{{ total_orders }}</h3>
+        <p class="text-[11px] text-slate-500">{{ processing_orders }} processing</p>
+      </div>
+      <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5 backdrop-blur-md">
+        <div class="mb-2 flex items-start justify-between">
+          <span class="text-xs font-medium text-slate-400">Total Users</span>
+          <span class="rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">+{{ new_users_week }} this week</span>
+        </div>
+        <h3 class="mb-1 text-2xl font-bold text-white">{{ total_users }}</h3>
+        <p class="text-[11px] text-slate-500">Across all roles</p>
+      </div>
+      <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5 backdrop-blur-md">
+        <div class="mb-2 flex items-start justify-between">
+          <span class="text-xs font-medium text-slate-400">Products Listed</span>
+          <span class="rounded px-2 py-0.5 text-xs font-medium {% if low_stock_count %} bg-amber-500/10 text-amber-400 {% else %} bg-emerald-500/10 text-emerald-400 {% endif %}">
+            {{ low_stock_count }} low
+          </span>
+        </div>
+        <h3 class="mb-1 text-2xl font-bold text-white">{{ total_products }}</h3>
+        <p class="text-[11px] text-slate-500">Stock ≤5 flagged</p>
+      </div>
+    </div>
+
+    <!-- ============= ANALYTICS / GRAPHS ============= -->
+    <section id="analytics" class="scroll-mt-6">
+      <div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <!-- Orders & Revenue trend -->
+        <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-md lg:col-span-2">
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-200">Orders & Revenue Trend</h3>
+            <span class="text-xs text-slate-500">Last 7 days</span>
+          </div>
+          <div class="h-64">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Order status donut -->
+        <div class="flex flex-col justify-between rounded-xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-md">
+          <div class="mb-2 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-200">Order Status</h3>
+            <span class="text-xs text-slate-500">Breakdown</span>
+          </div>
+          <div class="relative flex h-52 items-center justify-center">
+            <canvas id="statusChart"></canvas>
+          </div>
+          <p class="mt-2 text-center text-[11px] text-slate-500">{{ total_orders }} orders tracked platform-wide.</p>
+        </div>
+      </div>
+
+      <div class="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <!-- User role donut -->
+        <div class="flex flex-col justify-between rounded-xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-md">
+          <div class="mb-2 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-200">User Roles</h3>
+            <span class="text-xs text-slate-500">Distribution</span>
+          </div>
+          <div class="relative flex h-52 items-center justify-center">
+            <canvas id="roleChart"></canvas>
+          </div>
+          <p class="mt-2 text-center text-[11px] text-slate-500">{{ total_users }} registered accounts.</p>
+        </div>
+
+        <!-- Top products bar -->
+        <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-md lg:col-span-2">
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-200">Top Products by Units Sold</h3>
+            <span class="text-xs text-slate-500">All time</span>
+          </div>
+          {% if top_products %}
+            <div class="h-64">
+              <canvas id="topProductsChart"></canvas>
+            </div>
+          {% else %}
+            <div class="flex h-64 items-center justify-center text-sm text-slate-500">No sales recorded yet.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Secondary stat cards -->
+      <div class="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-xl border border-slate-800/80 bg-gradient-to-br from-slate-900 to-slate-800/60 p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-cyan-400">New Signups (7d)</p>
+          <div class="mt-3 h-16"><canvas id="signupSparkline"></canvas></div>
+        </div>
+        <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-cyan-400">Delivery Pipeline</p>
+          <div class="mt-2 space-y-1.5 text-xs text-slate-400">
+            <div class="flex justify-between"><span>Open job postings</span><span class="font-bold text-white">{{ open_delivery_jobs }}</span></div>
+            <div class="flex justify-between"><span>Active deliveries</span><span class="font-bold text-white">{{ active_deliveries }}</span></div>
+            <div class="flex justify-between"><span>Completed</span><span class="font-bold text-white">{{ completed_deliveries }}</span></div>
+          </div>
+        </div>
+        <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-cyan-400">AI Assistant Health</p>
+          <div class="mt-2 space-y-1.5 text-xs text-slate-400">
+            <div class="flex justify-between"><span>Total queries</span><span class="font-bold text-white">{{ ai_logs_total }}</span></div>
+            <div class="flex justify-between"><span>Fallback rate</span><span class="font-bold {% if ai_fallback_rate > 20 %}text-rose-400{% else %}text-white{% endif %}">{{ ai_fallback_rate }}%</span></div>
+            <div class="flex justify-between"><span>Upcoming appts</span><span class="font-bold text-white">{{ upcoming_appointments }}</span></div>
+          </div>
+        </div>
+        <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-cyan-400">Order Mix</p>
+          <div class="mt-2 space-y-1.5 text-xs text-slate-400">
+            <div class="flex justify-between"><span>Completed</span><span class="font-bold text-white">{{ completed_orders }}</span></div>
+            <div class="flex justify-between"><span>Pending</span><span class="font-bold text-white">{{ pending_orders }}</span></div>
+            <div class="flex justify-between"><span>Cancelled</span><span class="font-bold text-white">{{ cancelled_orders }}</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= ORDERS ============= -->
+    <section id="orders" class="mb-10 scroll-mt-6">
+      <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-md">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-200">Recent Orders</h2>
+          <span class="text-xs uppercase tracking-widest text-slate-500">Last 8</span>
+        </div>
+        {% if recent_orders %}
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-400">
+              <thead class="font-semibold uppercase tracking-wider text-slate-300">
+                <tr class="border-b border-slate-800">
+                  <th class="p-3">Order</th>
+                  <th class="p-3">Customer</th>
+                  <th class="p-3">Total</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3">Placed</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                {% for order in recent_orders %}
+                  <tr>
+                    <td class="p-3 font-mono text-slate-500">#{{ order.id }}</td>
+                    <td class="p-3 font-medium text-slate-200">{{ order.customer.user.username }}</td>
+                    <td class="p-3 font-semibold text-white">${{ order.total|floatformat:2 }}</td>
+                    <td class="p-3">
+                      <span class="rounded px-2 py-0.5 text-[11px] font-bold
+                        {% if order.status == 'Completed' %} bg-emerald-500/10 text-emerald-400
+                        {% elif order.status == 'Processing' %} bg-amber-500/10 text-amber-400
+                        {% elif order.status == 'Cancelled' %} bg-rose-500/10 text-rose-400
+                        {% else %} bg-slate-700/50 text-slate-300 {% endif %}">
+                        {{ order.status }}
+                      </span>
+                    </td>
+                    <td class="p-3">{{ order.created_at|date:"M j, Y" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-sm text-slate-500">No orders yet.</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- ============= USERS ============= -->
+    <section id="users" class="mb-10 scroll-mt-6">
+      <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-md">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-sm font-semibold text-slate-200">User Management</h2>
+          <form method="get" class="flex items-center gap-2">
+            <select name="role" onchange="this.form.submit()" class="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 focus:border-cyan-500 focus:outline-none">
+              <option value="" {% if not role_filter %}selected{% endif %}>All Roles</option>
+              <option value="Admin" {% if role_filter == 'Admin' %}selected{% endif %}>Admin</option>
+              <option value="Customer" {% if role_filter == 'Customer' %}selected{% endif %}>Customer</option>
+              <option value="Seller" {% if role_filter == 'Seller' %}selected{% endif %}>Seller</option>
+              <option value="Provider" {% if role_filter == 'Provider' %}selected{% endif %}>Provider</option>
+              <option value="Courier" {% if role_filter == 'Courier' %}selected{% endif %}>Courier</option>
+            </select>
+          </form>
+        </div>
+        {% if all_users_with_roles %}
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-400">
+              <thead class="font-semibold uppercase tracking-wider text-slate-300">
+                <tr class="border-b border-slate-800">
+                  <th class="p-3">Username</th>
+                  <th class="p-3">Email</th>
+                  <th class="p-3">Role</th>
+                  <th class="p-3">Joined</th>
+                  <th class="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                {% for row in all_users_with_roles %}
+                  <tr>
+                    <td class="p-3 font-medium text-slate-200">{{ row.user.username }}</td>
+                    <td class="p-3 text-slate-500">{{ row.user.email|default:"—" }}</td>
+                    <td class="p-3"><span class="rounded bg-slate-800 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-cyan-400">{{ row.role }}</span></td>
+                    <td class="p-3">{{ row.user.date_joined|date:"M j, Y" }}</td>
+                    <td class="p-3">
+                      {% if row.user.is_active %}
+                        <span class="font-bold text-emerald-400">Active</span>
+                      {% else %}
+                        <span class="font-bold text-rose-400">Disabled</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-sm text-slate-500">No users match this filter.</p>
+        {% endif %}
+        <p class="mt-4 text-xs text-slate-500">For editing permissions, resetting passwords, or deleting accounts, use the <a href="/admin/" target="_blank" class="font-semibold text-cyan-400 underline">Django Admin</a>.</p>
+      </div>
+    </section>
+
+    <!-- ============= INVENTORY / PRODUCTS ============= -->
+    <section id="products" class="mb-10 scroll-mt-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-md lg:col-span-2">
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-200">Top Products</h2>
+            <span class="text-xs uppercase tracking-widest text-slate-500">By units sold</span>
+          </div>
+          {% if top_products %}
+            <ul class="space-y-3">
+              {% for p in top_products %}
+                <li class="flex items-center justify-between border-b border-slate-800/60 pb-3 last:border-0 last:pb-0">
+                  <div>
+                    <p class="text-sm font-semibold text-slate-200">{{ p.product__name }}</p>
+                    <p class="text-xs text-slate-500">{{ p.units_sold }} sold · stock {{ p.product__stock }}</p>
+                  </div>
+                  <p class="font-mono text-sm font-bold text-cyan-400">${{ p.revenue|floatformat:2 }}</p>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-sm text-slate-500">No sales recorded yet.</p>
+          {% endif %}
+        </div>
+
+        <div class="rounded-xl border {% if low_stock_products %} border-amber-500/30 bg-amber-500/5 {% else %} border-slate-800/80 bg-slate-900/60 {% endif %} p-6 backdrop-blur-md">
+          <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold {% if low_stock_products %} text-amber-400 {% else %} text-slate-200 {% endif %}">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86l-8.18 14.18A2 2 0 003.82 21h16.36a2 2 0 001.71-3l-8.18-14.14a2 2 0 00-3.42 0z"/></svg>
+            Low Stock Alert
+          </h2>
+          {% if low_stock_products %}
+            <div class="flex flex-wrap gap-2">
+              {% for product in low_stock_products %}
+                <span class="rounded-full border border-amber-500/30 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-amber-300">
+                  {{ product.name }} — {{ product.stock }} left
+                </span>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-sm text-slate-500">All products are well stocked.</p>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ============= DELIVERIES ============= -->
+    <section id="deliveries" class="mb-4 scroll-mt-6">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5">
+          <p class="text-xs font-medium text-slate-400">Open Job Postings</p>
+          <h3 class="mt-1 text-2xl font-bold text-white">{{ open_delivery_jobs }}</h3>
+        </div>
+        <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5">
+          <p class="text-xs font-medium text-slate-400">Active Deliveries</p>
+          <h3 class="mt-1 text-2xl font-bold text-white">{{ active_deliveries }}</h3>
+        </div>
+        <div class="rounded-xl border border-slate-800/80 bg-slate-900/60 p-5">
+          <p class="text-xs font-medium text-slate-400">Completed Deliveries</p>
+          <h3 class="mt-1 text-2xl font-bold text-white">{{ completed_deliveries }}</h3>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============= CHART INITIALIZATION (real DB-driven data) ============= -->
+<script>
+  (function () {
+    const trendLabels = {{ trend_labels_json|safe }};
+    const trendOrders = {{ trend_order_counts_json|safe }};
+    const trendRevenue = {{ trend_revenue_json|safe }};
+    const signupCounts = {{ signup_counts_json|safe }};
+    const statusLabels = {{ order_status_labels_json|safe }};
+    const statusValues = {{ order_status_values_json|safe }};
+    const roleLabels = {{ role_labels_json|safe }};
+    const roleValues = {{ role_values_json|safe }};
+    const productLabels = {{ top_product_labels_json|safe }};
+    const productUnits = {{ top_product_units_json|safe }};
+
+    let charts = [];
+
+    function destroyAll() {
+      charts.forEach(c => c && c.destroy());
+      charts = [];
+    }
+
+    function renderCharts() {
+      destroyAll();
+
+      const trendEl = document.getElementById('trendChart');
+      if (trendEl) {
+        charts.push(new Chart(trendEl.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: trendLabels,
+            datasets: [
+              {
+                label: 'Orders',
+                data: trendOrders,
+                borderColor: '#06b6d4',
+                backgroundColor: 'rgba(6, 182, 212, 0.12)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                yAxisID: 'y',
+              },
+              {
+                label: 'Revenue ($)',
+                data: trendRevenue,
+                borderColor: '#d9ff5d',
+                backgroundColor: 'rgba(217, 255, 93, 0.08)',
+                fill: false,
+                tension: 0.4,
+                borderWidth: 2,
+                yAxisID: 'y1',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+            scales: {
+              x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+              y: { position: 'left', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+              y1: { position: 'right', grid: { display: false }, ticks: { color: '#d9ff5d' } },
+            },
+          },
+        }));
+      }
+
+      const statusEl = document.getElementById('statusChart');
+      if (statusEl) {
+        charts.push(new Chart(statusEl.getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: statusLabels,
+            datasets: [{
+              data: statusValues,
+              backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#f43f5e'],
+              borderWidth: 0,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } } },
+          },
+        }));
+      }
+
+      const roleEl = document.getElementById('roleChart');
+      if (roleEl) {
+        charts.push(new Chart(roleEl.getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: roleLabels,
+            datasets: [{
+              data: roleValues,
+              backgroundColor: ['#06b6d4', '#8b5cf6', '#d9ff5d', '#f97316'],
+              borderWidth: 0,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } } },
+          },
+        }));
+      }
+
+      const productsEl = document.getElementById('topProductsChart');
+      if (productsEl && productLabels.length) {
+        charts.push(new Chart(productsEl.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: productLabels,
+            datasets: [{
+              label: 'Units Sold',
+              data: productUnits,
+              backgroundColor: '#06b6d4',
+              borderRadius: 6,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+              y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+            },
+          },
+        }));
+      }
+
+      const sparkEl = document.getElementById('signupSparkline');
+      if (sparkEl) {
+        charts.push(new Chart(sparkEl.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: trendLabels,
+            datasets: [{
+              data: signupCounts,
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.15)',
+              fill: true,
+              tension: 0.4,
+              borderWidth: 2,
+              pointRadius: 0,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { display: false } },
+          },
+        }));
+      }
+    }
+
+    if (window.htmx) {
+      htmx.onLoad(renderCharts);
+    } else {
+      document.addEventListener('DOMContentLoaded', renderCharts);
+    }
+  })();
+</script>
 {% endblock %}
