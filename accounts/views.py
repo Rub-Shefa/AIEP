@@ -1,14 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from django.urls import reverse
 from datetime import datetime, timedelta
-from .forms import CustomUserCreationForm
+import base64
+from binascii import Error as BinasciiError
+from django.core.files.base import ContentFile
+from .forms import CustomUserCreationForm, CustomerAccountForm, CustomerProfileForm, CustomerSettingsAccountForm
 from accounts.models import ProviderProfile, CustomerProfile, CourierProfile, SellerProfile
 from catalog.models import Category, Product, Appointment
 from messaging.models import Conversation, ChatMessage
@@ -370,6 +374,77 @@ def customer_dashboard_view(request):
         'today_str': now.strftime('%Y-%m-%d'),
     }
     return render(request, 'accounts/customer/customer_dashboard.html', context)
+
+
+@login_required
+def customer_profile_view(request):
+    profile, _ = CustomerProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        account_form = CustomerAccountForm(request.POST, instance=request.user)
+        profile_form = CustomerProfileForm(request.POST, request.FILES, instance=profile)
+        if account_form.is_valid() and profile_form.is_valid():
+            account_form.save()
+            profile = profile_form.save(commit=False)
+            if request.POST.get('remove_avatar') == '1':
+                if profile.avatar_image:
+                    profile.avatar_image.delete(save=False)
+                profile.avatar_image = ''
+                profile.avatar_url = ''
+            else:
+                crop_data = request.POST.get('avatar_crop', '')
+                if crop_data.startswith('data:image/'):
+                    try:
+                        _, encoded = crop_data.split(',', 1)
+                        profile.avatar_image.save(
+                            f'{request.user.username}-profile.png',
+                            ContentFile(base64.b64decode(encoded, validate=True)),
+                            save=False,
+                        )
+                        profile.avatar_url = ''
+                    except (ValueError, BinasciiError):
+                        messages.error(request, 'That cropped image could not be processed.')
+            profile.save()
+            messages.success(request, 'Your profile has been updated.')
+            return redirect('customer_profile')
+    else:
+        account_form = CustomerAccountForm(instance=request.user)
+        profile_form = CustomerProfileForm(instance=profile)
+    return render(request, 'accounts/customer/profile.html', {
+        'account_form': account_form,
+        'profile_form': profile_form,
+        'customer_profile': profile,
+    })
+
+
+@login_required
+def customer_settings_view(request):
+    CustomerProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        account_form = CustomerSettingsAccountForm(request.POST, instance=request.user)
+        password_form = PasswordChangeForm(request.user, request.POST)
+        action = request.POST.get('action')
+
+        if action == 'account' and account_form.is_valid():
+            account_form.save()
+            messages.success(request, 'Your account settings have been saved.')
+            return redirect('customer_settings')
+
+        if action == 'password' and password_form.is_valid():
+            user = password_form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password has been updated.')
+            return redirect('customer_settings')
+    else:
+        account_form = CustomerSettingsAccountForm(instance=request.user)
+        password_form = PasswordChangeForm(request.user)
+    for field in password_form.fields.values():
+        field.widget.attrs.update({
+            'class': 'w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm bg-white focus:ring-2 focus:ring-teal/30 focus:border-teal outline-none transition-all'
+        })
+    return render(request, 'accounts/customer/settings.html', {
+        'account_form': account_form,
+        'password_form': password_form,
+    })
 
 
 @login_required

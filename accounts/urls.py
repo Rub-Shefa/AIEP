@@ -14,6 +14,8 @@ urlpatterns = [
     path('provider-dashboard/', views.provider_dashboard_view, name='provider_dashboard'),
     path('courier-dashboard/', views.courier_dashboard_view, name='courier_dashboard'),
     path('dashboard/', views.dashboard_redirect_view, name='dashboard'),
+    path('profile/', views.customer_profile_view, name='customer_profile'),
+    path('settings/', views.customer_settings_view, name='customer_settings'),
 
     # Provider pages
     path('provider-profile/', views.provider_profile_view, name='provider_profile'),

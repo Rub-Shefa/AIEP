@@ -1,97 +1,176 @@
-{% extends "accounts/base.html" %}
+﻿{% extends "accounts/base.html" %}
 
-{% block title %}Your Cart · HealthFlow{% endblock %}
+{% block title %}Checkout - HealthFlow{% endblock %}
 
 {% block content %}
-<main class="mx-auto max-w-5xl px-5 py-10 sm:px-8">
-
-  <div class="mb-8 flex items-center justify-between">
+<main class="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+  <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
     <div>
-      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Checkout</p>
-      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">Your Cart</h1>
+      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Secure checkout</p>
+      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">Review your order</h1>
+      <p class="mt-2 text-sm text-slate-500">Confirm fulfillment, payment, and receipt details before placing the order.</p>
     </div>
-    <a href="{% url 'customer_dashboard' %}" class="text-xs font-semibold text-slate-500 hover:text-teal">← Continue shopping</a>
+    <a href="{% url 'customer_dashboard' %}" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:border-teal hover:text-teal">Continue shopping</a>
   </div>
 
   {% if messages %}
-    <div class="mb-6 space-y-2">
-      {% for message in messages %}
-        <div class="rounded-xl border px-4 py-3 text-sm font-medium
-          {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700
-          {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal
-          {% elif message.tags == 'warning' %} border-amber-200 bg-amber-50 text-amber-700
-          {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}">
-          {{ message }}
-        </div>
-      {% endfor %}
+  <div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700 {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal {% elif message.tags == 'warning' %} border-amber-200 bg-amber-50 text-amber-700 {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}">
+      {{ message }}
     </div>
+    {% endfor %}
+  </div>
   {% endif %}
 
   {% if items %}
-  <div class="grid gap-8 lg:grid-cols-3">
-
-    <!-- Line items -->
-    <div class="lg:col-span-2 space-y-4">
-      {% for item in items %}
-      <div class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-50 border border-slate-100">
-          {% if item.product.image_url %}
-            <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="h-full w-full object-cover">
-          {% endif %}
+  <div class="grid gap-8 lg:grid-cols-[1fr_380px]">
+    <div class="space-y-6">
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-extrabold text-slate-900">Items</h2>
+        <div class="mt-4 divide-y divide-slate-100">
+          {% for item in items %}
+          <div class="flex flex-col gap-4 py-4 sm:flex-row sm:items-center">
+            <div class="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+              {% if item.product.image_url %}
+              <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="h-full w-full object-cover">
+              {% endif %}
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="font-mono text-[10px] font-bold uppercase tracking-wider text-teal-600">{{ item.product.category.name }}</p>
+              <h3 class="mt-1 text-sm font-extrabold text-slate-900">{{ item.product.name }}</h3>
+              <p class="mt-1 text-xs text-slate-500">${{ item.price }} each - {{ item.product.stock }} in stock</p>
+            </div>
+            <div class="flex items-center justify-between gap-3 sm:justify-end">
+              <p class="text-sm text-slate-500">Qty {{ item.quantity }}</p>
+              <p class="w-24 text-right text-sm font-extrabold text-slate-900">${{ item.total_price }}</p>
+            </div>
+          </div>
+          {% endfor %}
         </div>
-
-        <div class="min-w-0 flex-1">
-          <p class="font-mono text-[10px] uppercase font-bold tracking-wider text-teal-600">{{ item.product.category.name }}</p>
-          <h3 class="truncate text-sm font-extrabold text-slate-900">{{ item.product.name }}</h3>
-          <p class="mt-1 text-xs text-slate-500">${{ item.price }} each · {{ item.product.stock }} in stock</p>
+        <div class="mt-4 rounded-xl bg-slate-50 p-4">
+          <p class="text-sm font-bold text-slate-900">Need to change quantities?</p>
+          <p class="mt-1 text-xs text-slate-500">Use the quantity stepper here before confirming payment.</p>
+          <div class="mt-3 flex flex-wrap gap-3">
+            {% for item in items %}
+            <div class="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2">
+              <span class="max-w-32 truncate text-xs font-bold text-slate-600">{{ item.product.name }}</span>
+              <form method="post" action="{% url 'update_cart_item' item.product.id %}" class="flex items-center gap-2">
+                {% csrf_token %}
+                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="w-16 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-sm focus:border-teal focus:outline-none">
+                <button type="submit" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">Update</button>
+              </form>
+              <form method="post" action="{% url 'remove_from_cart' item.product.id %}">
+                {% csrf_token %}
+                <button type="submit" class="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50">Remove</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
         </div>
+      </section>
 
-        <form method="post" action="{% url 'update_cart_item' item.product.id %}" class="flex items-center gap-2">
-          {% csrf_token %}
-          <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}"
-                 class="w-16 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-sm focus:border-teal focus:outline-none">
-          <button type="submit" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">Update</button>
-        </form>
+      <form id="checkout-form" method="post" action="{% url 'checkout_view' %}" class="space-y-6">
+      {% csrf_token %}
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-extrabold text-slate-900">Contact confirmation</h2>
+        <p class="mt-1 text-sm text-slate-500">We will use these details for the order receipt and pickup or delivery updates.</p>
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          <label class="block text-sm font-bold text-slate-700">
+            Email address
+            <input type="email" name="contact_email" required value="{{ request.user.email }}" placeholder="name@example.com" class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/30">
+          </label>
+          <label class="block text-sm font-bold text-slate-700">
+            Phone number
+            <input type="tel" name="contact_phone" required value="{% if customer_profile %}{{ customer_profile.phone_number }}{% endif %}" placeholder="01XXXXXXXXX" class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/30">
+          </label>
+        </div>
+      </section>
 
-        <p class="w-20 shrink-0 text-right text-sm font-extrabold text-slate-900">${{ item.total_price }}</p>
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-extrabold text-slate-900">Fulfillment</h2>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <label class="cursor-pointer rounded-2xl border border-slate-200 p-4 hover:border-teal">
+            <input type="radio" name="fulfillment_method" value="delivery" checked class="mr-2 accent-teal">
+            <span class="text-sm font-extrabold text-slate-900">Home delivery</span>
+            <span class="mt-1 block text-xs text-slate-500">Courier delivery charge applies.</span>
+          </label>
+          <label class="cursor-pointer rounded-2xl border border-slate-200 p-4 hover:border-teal">
+            <input type="radio" name="fulfillment_method" value="pickup" class="mr-2 accent-teal">
+            <span class="text-sm font-extrabold text-slate-900">Pickup counter</span>
+            <span class="mt-1 block text-xs text-slate-500">Lower handling charge still applies.</span>
+          </label>
+        </div>
+        <div id="delivery-fields" class="mt-5 grid gap-4">
+          <label class="block text-sm font-bold text-slate-700">
+            Delivery address
+            <textarea name="delivery_address" rows="3" placeholder="House, road, area, city" class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/30">{% if request.user.customer_profile.location %}{{ request.user.customer_profile.location }}{% endif %}</textarea>
+          </label>
+        </div>
+        <div id="pickup-fields" class="mt-5 hidden">
+          <label class="block text-sm font-bold text-slate-700">
+            Pickup location
+            <select name="pickup_location" class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/30">
+              <option value="">Choose a pickup counter</option>
+              {% for value, label in pickup_locations %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <label class="mt-5 block text-sm font-bold text-slate-700">
+          Delivery note
+          <textarea name="delivery_note" rows="2" placeholder="Optional instructions for courier or pickup staff" class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/30"></textarea>
+        </label>
+      </section>
 
-        <form method="post" action="{% url 'remove_from_cart' item.product.id %}">
-          {% csrf_token %}
-          <button type="submit" class="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600" title="Remove">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-          </button>
-        </form>
-      </div>
-      {% endfor %}
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-extrabold text-slate-900">Payment</h2>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          {% for value, label in payment_methods %}
+          <label class="cursor-pointer rounded-2xl border border-slate-200 p-4 hover:border-teal">
+            <input type="radio" name="payment_method" value="{{ value }}" {% if value == 'cod' %}checked{% endif %} class="mr-2 accent-teal">
+            <span class="text-sm font-extrabold text-slate-900">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <label id="payment-phone-field" class="mt-5 hidden text-sm font-bold text-slate-700">
+          Wallet or account number
+          <input type="text" name="payment_phone" placeholder="01XXXXXXXXX" class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/30">
+        </label>
+        <p class="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800">bKash, card, and bank options are simulated for the course prototype. Real payments need a merchant account and payment gateway approval.</p>
+      </section>
+      </form>
     </div>
 
-    <!-- Order summary -->
-    <div class="lg:col-span-1">
-      <div class="sticky top-24 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-extrabold text-slate-900">Order Summary</h2>
-        <div class="mt-4 space-y-2 border-b border-slate-100 pb-4 text-sm">
+    <aside class="lg:sticky lg:top-24 lg:self-start">
+      <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 class="text-lg font-extrabold text-slate-900">Receipt</h2>
+        <div class="mt-4 space-y-3 border-b border-slate-100 pb-4 text-sm">
           <div class="flex justify-between text-slate-600">
             <span>Subtotal</span>
             <span class="font-semibold text-slate-900">${{ subtotal }}</span>
           </div>
           <div class="flex justify-between text-slate-600">
-            <span>Tax & shipping</span>
-            <span class="font-semibold text-slate-900">${{ tax_shipping }}</span>
+            <span>Platform tax</span>
+            <span class="font-semibold text-slate-900">${{ tax }}</span>
+          </div>
+          <div class="flex justify-between text-slate-600">
+            <span id="service-label">Delivery charge</span>
+            <span id="service-charge" class="font-semibold text-slate-900" data-delivery="{{ home_delivery_charge }}" data-pickup="{{ pickup_handling_charge }}">${{ service_charge }}</span>
           </div>
         </div>
         <div class="mt-4 flex justify-between text-base font-extrabold text-slate-900">
-          <span>Total</span>
-          <span>${{ total }}</span>
+          <span>Total payable</span>
+          <span id="checkout-total" data-subtotal="{{ subtotal }}" data-tax="{{ tax }}">${{ total }}</span>
         </div>
-
-        <form method="post" action="{% url 'checkout_view' %}">
-          {% csrf_token %}
-          <button type="submit" class="mt-6 w-full rounded-xl bg-ink px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-teal">
-            Place Order
-          </button>
-        </form>
-      </div>
-    </div>
+        <div class="mt-5 rounded-xl bg-slate-950 p-4 text-xs text-slate-200">
+          <p class="font-extrabold text-white">Order confirmation</p>
+          <p class="mt-1">Your order will be created only after you confirm this receipt.</p>
+        </div>
+        <button type="submit" form="checkout-form" class="mt-5 w-full rounded-xl bg-ink px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-teal">Confirm and place order</button>
+      </section>
+    </aside>
   </div>
 
   {% else %}
@@ -99,9 +178,51 @@
     <svg class="h-14 w-14 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
     <h3 class="mt-4 text-lg font-bold text-slate-900">Your cart is empty</h3>
     <p class="mt-1 text-sm text-slate-500">Browse the catalog and add some supplies to get started.</p>
-    <a href="{% url 'customer_dashboard' %}" class="mt-6 rounded-xl bg-ink px-6 py-3 text-sm font-extrabold text-white hover:bg-teal">Browse Catalog</a>
+    <a href="{% url 'customer_dashboard' %}" class="mt-6 rounded-xl bg-ink px-6 py-3 text-sm font-extrabold text-white hover:bg-teal">Browse catalog</a>
   </div>
   {% endif %}
-
 </main>
+
+<script>
+  (() => {
+    const fulfillmentInputs = document.querySelectorAll("input[name='fulfillment_method']");
+    const paymentInputs = document.querySelectorAll("input[name='payment_method']");
+    const deliveryFields = document.getElementById("delivery-fields");
+    const pickupFields = document.getElementById("pickup-fields");
+    const paymentPhoneField = document.getElementById("payment-phone-field");
+    const serviceLabel = document.getElementById("service-label");
+    const serviceCharge = document.getElementById("service-charge");
+    const total = document.getElementById("checkout-total");
+
+    function money(value) {
+      return "$" + Number(value).toFixed(2);
+    }
+
+    function updateFulfillment() {
+      const selected = document.querySelector("input[name='fulfillment_method']:checked");
+      if (!selected || !serviceCharge || !total) return;
+      const isPickup = selected.value === "pickup";
+      const charge = Number(isPickup ? serviceCharge.dataset.pickup : serviceCharge.dataset.delivery);
+      const subtotal = Number(total.dataset.subtotal);
+      const tax = Number(total.dataset.tax);
+      deliveryFields.classList.toggle("hidden", isPickup);
+      pickupFields.classList.toggle("hidden", !isPickup);
+      serviceLabel.textContent = isPickup ? "Pickup handling" : "Delivery charge";
+      serviceCharge.textContent = money(charge);
+      total.textContent = money(subtotal + tax + charge);
+    }
+
+    function updatePayment() {
+      const selected = document.querySelector("input[name='payment_method']:checked");
+      if (!selected || !paymentPhoneField) return;
+      paymentPhoneField.classList.toggle("hidden", selected.value !== "bkash");
+    }
+
+    fulfillmentInputs.forEach((input) => input.addEventListener("change", updateFulfillment));
+    paymentInputs.forEach((input) => input.addEventListener("change", updatePayment));
+    updateFulfillment();
+    updatePayment();
+  })();
+</script>
 {% endblock %}
+

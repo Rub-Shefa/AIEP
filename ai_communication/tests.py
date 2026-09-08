@@ -1,6 +1,5 @@
 from django.test import TestCase
 from django.urls import reverse
-
 from .knowledge_base import get_ai_response
 from .models import AIQueryLog
 

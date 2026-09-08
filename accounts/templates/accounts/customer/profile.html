@@ -1,0 +1,423 @@
+{% extends "accounts/base.html" %} {% block content %}
+<main class="mx-auto max-w-5xl px-5 py-10 sm:px-8">
+  <div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p
+        class="font-mono text-xs font-bold uppercase tracking-[0.2em] text-teal"
+      >
+        Account center
+      </p>
+      <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-ink">
+        Your profile
+      </h1>
+      <p class="mt-2 text-sm text-slate-500">
+        Keep your contact details and care preferences up to date.
+      </p>
+    </div>
+    <a
+      href="{% url 'customer_dashboard' %}"
+      class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:border-teal hover:text-teal"
+      >Back to dashboard</a
+    >
+  </div>
+
+  {% if messages %}{% for message in messages %}
+  <div
+    class="mb-6 rounded-xl border border-teal/20 bg-teal/10 px-4 py-3 text-sm font-semibold text-teal-800"
+  >
+    {{ message }}
+  </div>
+  {% endfor %}{% endif %}
+
+  <form
+    method="post"
+    enctype="multipart/form-data"
+    class="grid gap-6 lg:grid-cols-[260px_1fr]"
+    id="profile-form"
+  >
+    {% csrf_token %}
+    <aside
+      class="rounded-2xl border border-slate-200 bg-ink p-6 text-white shadow-lg"
+    >
+      <div
+        class="relative mx-auto h-36 w-36 overflow-hidden rounded-full border-4 border-teal/30 bg-slate-800"
+      >
+        <img
+          id="avatar-preview"
+          src="{% if customer_profile.avatar_image %}{{ customer_profile.avatar_image.url }}{% elif customer_profile.avatar_url %}{{ customer_profile.avatar_url }}{% endif %}"
+          alt="Profile photo"
+          class="{% if not customer_profile.avatar_image and not customer_profile.avatar_url %}hidden {% endif %}h-full w-full object-cover"
+        />
+        <div
+          id="avatar-fallback"
+          class="{% if customer_profile.avatar_image or customer_profile.avatar_url %}hidden {% endif %}flex h-full w-full items-center justify-center bg-lime text-3xl font-extrabold text-ink"
+        >
+          {{ user.username|slice:":2"|upper }}
+        </div>
+      </div>
+      <div class="relative mt-5 text-center" id="avatar-action-wrapper">
+        <button
+          type="button"
+          id="avatar-action-button"
+          class="inline-flex items-center gap-2 rounded-xl bg-teal px-4 py-2.5 text-xs font-extrabold text-ink hover:bg-lime"
+        >
+          Edit photo
+          <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+        <div
+          id="avatar-action-menu"
+          class="absolute left-1/2 z-20 mt-2 hidden w-48 -translate-x-1/2 overflow-hidden rounded-xl border border-slate-700 bg-slate-950 text-left shadow-2xl"
+        >
+          <label
+            for="id_avatar_image"
+            class="block cursor-pointer px-4 py-3 text-xs font-bold text-slate-100 hover:bg-slate-800 hover:text-lime"
+          >
+            Upload new photo
+          </label>
+          <button
+            type="button"
+            id="edit-avatar"
+            class="{% if not customer_profile.avatar_image and not customer_profile.avatar_url %}hidden {% endif %}block w-full px-4 py-3 text-left text-xs font-bold text-slate-100 hover:bg-slate-800 hover:text-lime"
+          >
+            Edit current photo
+          </button>
+          <button
+            type="button"
+            id="remove-avatar"
+            class="{% if not customer_profile.avatar_image and not customer_profile.avatar_url %}hidden {% endif %}block w-full px-4 py-3 text-left text-xs font-bold text-rose-300 hover:bg-rose-600 hover:text-white"
+          >
+            Remove photo
+          </button>
+        </div>
+        {{ profile_form.avatar_image }}
+      </div>
+      <p class="mt-5 text-center text-lg font-extrabold">
+        {{ user.get_full_name|default:user.username }}
+      </p>
+      <p class="mt-1 text-center text-xs text-slate-400">
+        @{{ user.username }}
+      </p>
+      <a
+        href="{% url 'customer_settings' %}"
+        class="mt-6 block rounded-xl border border-slate-700 px-4 py-2.5 text-center text-xs font-bold text-slate-200 hover:border-lime hover:text-lime"
+        >Account settings</a
+      >
+    </aside>
+    <section
+      class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      <h2 class="text-lg font-extrabold text-slate-900">Personal details</h2>
+      <div class="mt-5 grid gap-5 sm:grid-cols-2">
+        <input type="hidden" name="avatar_crop" id="avatar-crop" />
+        <input
+          type="hidden"
+          name="remove_avatar"
+          id="remove-avatar-input"
+          value="0"
+        />
+        {% for field in account_form %}
+        <label class="block text-sm font-bold text-slate-700">
+          {{ field.label }}{{ field }}
+          {% if field.errors %}
+          <span class="mt-1 block text-xs font-medium text-rose-600">
+            {{ field.errors|striptags }}
+          </span>
+          {% endif %}
+        </label>
+        {% endfor %}
+        {% for field in profile_form %}
+        {% if field.name != 'avatar_image' %}
+        <label class="block text-sm font-bold text-slate-700 {% if field.name == 'health_preferences' %}sm:col-span-2{% endif %}">
+          {{ field.label }}{{ field }}
+          {% if field.errors %}
+          <span class="mt-1 block text-xs font-medium text-rose-600">
+            {{ field.errors|striptags }}
+          </span>
+          {% endif %}
+        </label>
+        {% endif %}
+        {% endfor %}
+      </div>
+      <div class="mt-7 flex justify-end">
+        <button
+          type="submit"
+          class="rounded-xl bg-ink px-5 py-3 text-xs font-extrabold text-white hover:bg-teal"
+        >
+          Save profile
+        </button>
+      </div>
+    </section>
+  </form>
+  <div
+    id="avatar-modal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6"
+    aria-hidden="true"
+  >
+    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-950">Edit profile photo</h2>
+          <p class="mt-1 text-sm text-slate-500">Drag to reposition and zoom until it fits the square.</p>
+        </div>
+        <button
+          type="button"
+          id="avatar-modal-close"
+          class="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-bold text-slate-500 hover:border-slate-400 hover:text-slate-900"
+        >
+          X
+        </button>
+      </div>
+      <div class="mt-5 flex justify-center">
+        <div class="relative h-72 w-72 overflow-hidden rounded-2xl bg-slate-900">
+          <canvas
+            id="avatar-canvas"
+            width="320"
+            height="320"
+            class="h-full w-full cursor-move"
+          ></canvas>
+          <div class="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-inset ring-white/80"></div>
+        </div>
+      </div>
+      <label class="mt-5 block text-xs font-extrabold uppercase tracking-wider text-slate-500" for="avatar-zoom">
+        Zoom
+      </label>
+      <input
+        id="avatar-zoom"
+        type="range"
+        min="1"
+        max="3"
+        step="0.01"
+        value="1"
+        class="mt-2 w-full accent-teal"
+      />
+      <div class="mt-5 flex flex-wrap justify-between gap-3">
+        <label
+          for="id_avatar_image"
+          class="cursor-pointer rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-extrabold text-slate-700 hover:border-teal hover:text-teal"
+        >
+          Choose another
+        </label>
+        <div class="flex gap-3">
+          <button
+            type="button"
+            id="avatar-cancel"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-extrabold text-slate-700 hover:border-slate-500"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            id="avatar-apply"
+            class="rounded-xl bg-ink px-4 py-2.5 text-xs font-extrabold text-white hover:bg-teal"
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+  (() => {
+    const input = document.getElementById("id_avatar_image");
+    const canvas = document.getElementById("avatar-canvas");
+    const preview = document.getElementById("avatar-preview");
+    const fallback = document.getElementById("avatar-fallback");
+    const crop = document.getElementById("avatar-crop");
+    const removeInput = document.getElementById("remove-avatar-input");
+    const removeButton = document.getElementById("remove-avatar");
+    const editButton = document.getElementById("edit-avatar");
+    const actionButton = document.getElementById("avatar-action-button");
+    const actionMenu = document.getElementById("avatar-action-menu");
+    const actionWrapper = document.getElementById("avatar-action-wrapper");
+    const modal = document.getElementById("avatar-modal");
+    const closeButton = document.getElementById("avatar-modal-close");
+    const cancelButton = document.getElementById("avatar-cancel");
+    const applyButton = document.getElementById("avatar-apply");
+    const zoomInput = document.getElementById("avatar-zoom");
+    if (!input || !canvas) return;
+    const ctx = canvas.getContext("2d");
+    let image = null;
+    let objectUrl = "";
+    let scale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+    let dragging = false;
+    let dragStart = { x: 0, y: 0, offsetX: 0, offsetY: 0 };
+
+    function hideMenu() {
+      actionMenu.classList.add("hidden");
+    }
+
+    function showModal() {
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function hideModal() {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    function clampOffsets(baseWidth, baseHeight) {
+      const maxX = Math.max(0, (baseWidth * scale - 320) / 2);
+      const maxY = Math.max(0, (baseHeight * scale - 320) / 2);
+      offsetX = Math.min(maxX, Math.max(-maxX, offsetX));
+      offsetY = Math.min(maxY, Math.max(-maxY, offsetY));
+    }
+
+    function render() {
+      if (!image) return;
+      const coverScale = Math.max(320 / image.naturalWidth, 320 / image.naturalHeight);
+      const baseWidth = image.naturalWidth * coverScale;
+      const baseHeight = image.naturalHeight * coverScale;
+      const drawWidth = baseWidth * scale;
+      const drawHeight = baseHeight * scale;
+      clampOffsets(baseWidth, baseHeight);
+      ctx.clearRect(0, 0, 320, 320);
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, 320, 320);
+      ctx.drawImage(
+        image,
+        160 - drawWidth / 2 + offsetX,
+        160 - drawHeight / 2 + offsetY,
+        drawWidth,
+        drawHeight,
+      );
+    }
+
+    function loadImage(src) {
+      image = new Image();
+      image.onload = () => {
+        scale = 1;
+        offsetX = 0;
+        offsetY = 0;
+        zoomInput.value = "1";
+        render();
+        showModal();
+      };
+      image.src = src;
+    }
+
+    input.addEventListener("change", () => {
+      const file = input.files[0];
+      if (!file) return;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = URL.createObjectURL(file);
+      loadImage(objectUrl);
+      removeInput.value = "0";
+      hideMenu();
+    });
+
+    actionButton.addEventListener("click", () => {
+      actionMenu.classList.toggle("hidden");
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!actionWrapper.contains(event.target)) hideMenu();
+    });
+
+    if (editButton) {
+      editButton.addEventListener("click", () => {
+        if (preview.src) {
+          loadImage(preview.src);
+          hideMenu();
+        }
+      });
+    }
+
+    removeButton.addEventListener("click", () => {
+      input.value = "";
+      image = null;
+      crop.value = "";
+      removeInput.value = "1";
+      preview.classList.add("hidden");
+      fallback.classList.remove("hidden");
+      removeButton.classList.add("hidden");
+      if (editButton) editButton.classList.add("hidden");
+      hideMenu();
+      hideModal();
+    });
+
+    zoomInput.addEventListener("input", () => {
+      scale = Number(zoomInput.value);
+      render();
+    });
+
+    function pointerPosition(event) {
+      const point = event.touches ? event.touches[0] : event;
+      return { x: point.clientX, y: point.clientY };
+    }
+
+    canvas.addEventListener("mousedown", (event) => {
+      dragging = true;
+      const pos = pointerPosition(event);
+      dragStart = { x: pos.x, y: pos.y, offsetX, offsetY };
+    });
+
+    canvas.addEventListener("touchstart", (event) => {
+      dragging = true;
+      const pos = pointerPosition(event);
+      dragStart = { x: pos.x, y: pos.y, offsetX, offsetY };
+    }, { passive: true });
+
+    window.addEventListener("mousemove", (event) => {
+      if (!dragging) return;
+      const pos = pointerPosition(event);
+      offsetX = dragStart.offsetX + pos.x - dragStart.x;
+      offsetY = dragStart.offsetY + pos.y - dragStart.y;
+      render();
+    });
+
+    window.addEventListener("touchmove", (event) => {
+      if (!dragging) return;
+      const pos = pointerPosition(event);
+      offsetX = dragStart.offsetX + pos.x - dragStart.x;
+      offsetY = dragStart.offsetY + pos.y - dragStart.y;
+      render();
+    }, { passive: true });
+
+    window.addEventListener("mouseup", () => {
+      dragging = false;
+    });
+
+    window.addEventListener("touchend", () => {
+      dragging = false;
+    });
+
+    function cancelEdit() {
+      input.value = "";
+      if (!crop.value) image = null;
+      hideModal();
+    }
+
+    closeButton.addEventListener("click", cancelEdit);
+    cancelButton.addEventListener("click", cancelEdit);
+
+    applyButton.addEventListener("click", () => {
+      if (!image) return;
+      render();
+      const dataUrl = canvas.toDataURL("image/png");
+      crop.value = dataUrl;
+      preview.src = dataUrl;
+      preview.classList.remove("hidden");
+      fallback.classList.add("hidden");
+      removeInput.value = "0";
+      removeButton.classList.remove("hidden");
+      if (editButton) editButton.classList.remove("hidden");
+      hideModal();
+    });
+
+    document.getElementById("profile-form").addEventListener("submit", () => {
+      if (image && !crop.value) {
+        render();
+        crop.value = canvas.toDataURL("image/png");
+      }
+    });
+  })();
+</script>
+{% endblock %}

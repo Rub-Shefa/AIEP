@@ -2,6 +2,8 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
@@ -10,7 +12,28 @@ from catalog.models import Product
 from .cart import Cart
 from .models import Order, OrderItem, DeliveryJobPosting, DeliveryBid, Delivery
 
-TAX_SHIPPING_RATE = Decimal('0.05')  # flat 5% tax/shipping surcharge
+TAX_RATE = Decimal('0.02')
+HOME_DELIVERY_CHARGE = Decimal('5.00')
+PICKUP_HANDLING_CHARGE = Decimal('2.00')
+
+PICKUP_LOCATIONS = [
+    ('gulshan', 'HealthFlow Gulshan Pickup Counter'),
+    ('dhanmondi', 'HealthFlow Dhanmondi Pickup Counter'),
+    ('uttara', 'HealthFlow Uttara Pickup Counter'),
+]
+
+PAYMENT_METHOD_LABELS = {
+    'cod': 'Cash on delivery',
+    'bkash': 'bKash wallet',
+    'card': 'Visa/Mastercard',
+    'bank': 'Bank transfer',
+}
+
+
+def _checkout_totals(subtotal, fulfillment_method='delivery'):
+    tax = (subtotal * TAX_RATE).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    service_charge = PICKUP_HANDLING_CHARGE if fulfillment_method == 'pickup' else HOME_DELIVERY_CHARGE
+    return tax, service_charge, subtotal + tax + service_charge
 
 
 def _safe_redirect_back(request, fallback):
@@ -55,13 +78,18 @@ def cart_view(request):
     cart = Cart(request)
     items = list(cart)
     subtotal = cart.get_total_price()
-    tax_shipping = (subtotal * TAX_SHIPPING_RATE).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    total = subtotal + tax_shipping
+    tax, service_charge, total = _checkout_totals(subtotal)
     context = {
         'items': items,
         'subtotal': subtotal,
-        'tax_shipping': tax_shipping,
+        'tax': tax,
+        'service_charge': service_charge,
         'total': total,
+        'home_delivery_charge': HOME_DELIVERY_CHARGE,
+        'pickup_handling_charge': PICKUP_HANDLING_CHARGE,
+        'pickup_locations': PICKUP_LOCATIONS,
+        'payment_methods': PAYMENT_METHOD_LABELS.items(),
+        'customer_profile': getattr(request.user, 'customer_profile', None),
     }
     return render(request, 'orders/cart.html', context)
 
@@ -115,16 +143,67 @@ def checkout_view(request):
             return redirect('cart_view')
 
     customer_profile, _ = CustomerProfile.objects.get_or_create(user=request.user)
+    contact_email = (request.POST.get('contact_email') or '').strip()
+    contact_phone = (request.POST.get('contact_phone') or '').strip()
+    fulfillment_method = request.POST.get('fulfillment_method', 'delivery')
+    if fulfillment_method not in dict(Order.FULFILLMENT_CHOICES):
+        fulfillment_method = 'delivery'
+
+    delivery_address = (request.POST.get('delivery_address') or '').strip()
+    pickup_location = (request.POST.get('pickup_location') or '').strip()
+    payment_method = request.POST.get('payment_method', 'cod')
+    payment_phone = (request.POST.get('payment_phone') or '').strip()
+    delivery_note = (request.POST.get('delivery_note') or '').strip()
+
+    if not contact_email:
+        messages.error(request, "Please enter an email address for order confirmation.")
+        return redirect('cart_view')
+
+    try:
+        validate_email(contact_email)
+    except ValidationError:
+        messages.error(request, "Please enter a valid email address for order confirmation.")
+        return redirect('cart_view')
+
+    if not contact_phone:
+        messages.error(request, "Please enter a phone number for order confirmation.")
+        return redirect('cart_view')
+
+    if fulfillment_method == 'delivery' and not delivery_address:
+        messages.error(request, "Please confirm your delivery address before placing the order.")
+        return redirect('cart_view')
+
+    pickup_location_names = dict(PICKUP_LOCATIONS)
+    if fulfillment_method == 'pickup':
+        if pickup_location not in pickup_location_names:
+            messages.error(request, "Please choose a pickup counter.")
+            return redirect('cart_view')
+        delivery_address = ''
+
+    if payment_method not in PAYMENT_METHOD_LABELS:
+        messages.error(request, "Please choose a valid payment method.")
+        return redirect('cart_view')
+
+    if payment_method == 'bkash' and not payment_phone:
+        messages.error(request, "Please enter the bKash account number for this simulated payment.")
+        return redirect('cart_view')
 
     subtotal = cart.get_total_price()
-    tax_shipping = (subtotal * TAX_SHIPPING_RATE).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    total = subtotal + tax_shipping
+    tax, service_charge, total = _checkout_totals(subtotal, fulfillment_method)
 
     order = Order.objects.create(
         customer=customer_profile,
         subtotal=subtotal,
-        tax_shipping=tax_shipping,
+        tax_shipping=tax + service_charge,
         total=total,
+        contact_email=contact_email,
+        contact_phone=contact_phone,
+        fulfillment_method=fulfillment_method,
+        delivery_address=delivery_address,
+        pickup_location=pickup_location_names.get(pickup_location, '') if fulfillment_method == 'pickup' else '',
+        payment_method=payment_method,
+        payment_phone=payment_phone,
+        delivery_note=delivery_note,
         status='Pending',
     )
 

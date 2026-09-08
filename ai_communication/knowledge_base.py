@@ -185,7 +185,6 @@ HEALTH_DISCLAIMER = (
     "care, please consult a qualified healthcare professional._"
 )
 
-
 def _looks_like_health_query(query):
     """Cheap keyword check to decide whether a disclaimer should be attached.
 

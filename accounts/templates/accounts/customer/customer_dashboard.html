@@ -1,99 +1,233 @@
-{% extends "accounts/base.html" %}
-
-{% block title %}Customer Portal · HealthFlow{% endblock %}
-
-{% block content %}
+{% extends "accounts/base.html" %} {% block title %}Customer Portal ·
+HealthFlow{% endblock %} {% block content %}
 <div class="mx-auto max-w-[1500px] px-5 py-10 sm:px-8">
-
   {% if messages %}
-    <div class="mb-6 space-y-2">
-      {% for message in messages %}
-        <div class="rounded-xl border px-4 py-3 text-sm font-medium
-          {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700
-          {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal
-          {% elif message.tags == 'warning' %} border-amber-200 bg-amber-50 text-amber-700
-          {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}">
-          {{ message }}
-        </div>
-      {% endfor %}
+  <div class="mb-6 space-y-2">
+    {% for message in messages %}
+    <div
+      class="rounded-xl border px-4 py-3 text-sm font-medium {% if message.tags == 'error' %} border-rose-200 bg-rose-50 text-rose-700 {% elif message.tags == 'success' %} border-teal/30 bg-teal/10 text-teal {% elif message.tags == 'warning' %} border-amber-200 bg-amber-50 text-amber-700 {% else %} border-slate-200 bg-slate-50 text-slate-600 {% endif %}"
+    >
+      {{ message }}
     </div>
+    {% endfor %}
+  </div>
   {% endif %}
 
   <!-- Mobile section nav (sidebar is hidden below lg) -->
   <div class="mb-6 -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:hidden">
-    <a href="#overview" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">Overview</a>
-    <a href="#catalog" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">Supplies</a>
-    <a href="#doctors" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">Doctors</a>
-    <a href="#orders" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">Orders</a>
+    <a
+      href="#overview"
+      class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600"
+      >Overview</a
+    >
+    <a
+      href="#catalog"
+      class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600"
+      >Supplies</a
+    >
+    <a
+      href="#doctors"
+      class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600"
+      >Doctors</a
+    >
+    <a
+      href="#orders"
+      class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600"
+      >Orders</a
+    >
   </div>
 
   <div class="flex items-start gap-8">
-
     <!-- ============= SIDEBAR ============= -->
     <aside class="sticky top-[96px] hidden w-72 shrink-0 self-start lg:block">
-      <div class="overflow-hidden rounded-3xl border border-slate-800 bg-ink text-white shadow-xl">
-
+      <div
+        class="overflow-hidden rounded-3xl border border-slate-800 bg-ink text-white shadow-xl"
+      >
         <!-- Profile block -->
         <div class="border-b border-slate-800 p-6">
           <div class="flex items-center gap-3">
-            <img src="https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username|urlencode }}&background=D9FF5D&color=0B1620&bold=true"
-                 alt="{{ user.get_full_name|default:user.username }}"
-                 class="h-12 w-12 rounded-full border border-slate-700 object-cover">
+            <a href="{% url 'customer_profile' %}" class="shrink-0 rounded-full focus:outline-none focus:ring-4 focus:ring-lime/30">
+            {% if customer_profile.avatar_image %}
+            <img
+              src="{{ customer_profile.avatar_image.url }}"
+              alt="{{ user.get_full_name|default:user.username }}"
+              class="h-12 w-12 rounded-full border border-slate-700 object-cover"
+            />
+            {% elif customer_profile.avatar_url %}
+            <img
+              src="{{ customer_profile.avatar_url }}"
+              alt="{{ user.get_full_name|default:user.username }}"
+              class="h-12 w-12 rounded-full border border-slate-700 object-cover"
+            />
+            {% else %}
+            <img
+              src="https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username|urlencode }}&background=D9FF5D&color=0B1620&bold=true"
+              alt="{{ user.get_full_name|default:user.username }}"
+              class="h-12 w-12 rounded-full border border-slate-700 object-cover"
+            />
+            {% endif %}
+            </a>
             <div class="min-w-0">
-              <p class="truncate text-sm font-extrabold text-white">{{ user.get_full_name|default:user.username }}</p>
-              <p class="truncate text-xs text-slate-400">{{ user.email|default:"No email on file" }}</p>
+              <p class="truncate text-sm font-extrabold text-white">
+                {{ user.get_full_name|default:user.username }}
+              </p>
+              <p class="truncate text-xs text-slate-400">
+                {{ user.email|default:"No email on file" }}
+              </p>
             </div>
           </div>
-          <span class="mt-3 inline-block rounded-full bg-teal/15 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-teal">
+          <span
+            class="mt-3 inline-block rounded-full bg-teal/15 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-teal"
+          >
             Customer Account
           </span>
           {% if customer_profile.location %}
-            <p class="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
-              <svg class="h-3.5 w-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-              {{ customer_profile.location }}
-            </p>
+          <p class="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
+            <svg
+              class="h-3.5 w-3.5 text-slate-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            {{ customer_profile.location }}
+          </p>
           {% endif %}
         </div>
 
         <!-- Section nav -->
         <nav class="space-y-1 p-4">
-          <p class="px-3 pb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">Dashboard</p>
-          <a href="#overview" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          <p
+            class="px-3 pb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500"
+          >
+            Dashboard
+          </p>
+          <a
+            href="#overview"
+            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+              />
+            </svg>
             Overview
           </a>
-          <a href="#catalog" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          <a
+            href="#catalog"
+            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
+            </svg>
             Browse Supplies
           </a>
-          <a href="#doctors" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <a
+            href="#doctors"
+            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
             Browse Doctors
           </a>
-          <a href="#orders" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          <a
+            href="#orders"
+            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+              />
+            </svg>
             Order History
           </a>
         </nav>
 
         <!-- Quick actions -->
         <div class="space-y-2 border-t border-slate-800 p-4">
-          <p class="px-3 pb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">Quick Actions</p>
-          <a href="{% url 'cart_view' %}" class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-teal hover:text-white">
-            View Cart
-            {% if cart_item_count %}
-              <span class="rounded-full bg-lime px-2 py-0.5 text-[10px] font-extrabold text-ink">{{ cart_item_count }}</span>
+          <p
+            class="px-3 pb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500"
+          >
+            Quick Actions
+          </p>
+          <a
+            href="{% url 'cart_view' %}"
+            class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-teal hover:text-white"
+          >
+            View Cart {% if cart_item_count %}
+            <span
+              class="rounded-full bg-lime px-2 py-0.5 text-[10px] font-extrabold text-ink"
+              >{{ cart_item_count }}</span
+            >
             {% endif %}
           </a>
-          <a href="{% url 'ai_assistant' %}" class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-lime hover:text-lime">
+          <a
+            href="{% url 'ai_assistant' %}"
+            class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-lime hover:text-lime"
+          >
             AI Health Assistant
           </a>
           {% if user.is_staff or user.is_superuser %}
-            <a href="{% url 'admin_dashboard' %}" class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-teal hover:text-white">
-              ← Admin Hub
-            </a>
+          <a
+            href="{% url 'admin_dashboard' %}"
+            class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-teal hover:text-white"
+          >
+            ← Admin Hub
+          </a>
           {% endif %}
-          <a href="{% url 'logout' %}" class="flex items-center justify-between rounded-xl border border-rose-500/30 bg-rose-600/10 px-3 py-2.5 text-sm font-bold text-rose-300 transition hover:bg-rose-600 hover:text-white">
+          <a
+            href="{% url 'logout' %}"
+            class="flex items-center justify-between rounded-xl border border-rose-500/30 bg-rose-600/10 px-3 py-2.5 text-sm font-bold text-rose-300 transition hover:bg-rose-600 hover:text-white"
+          >
             Sign Out
           </a>
         </div>
@@ -102,264 +236,403 @@
 
     <!-- ============= MAIN CONTENT ============= -->
     <main class="min-w-0 flex-1">
-
       <!-- Header -->
       <div id="overview" class="mb-8 scroll-mt-28">
-        <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Customer Portal</p>
-        <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-          Welcome back, <span class="bg-gradient-to-r from-teal via-emerald-500 to-lime bg-clip-text text-transparent">{{ user.first_name|default:user.username }}</span>
+        <p
+          class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal"
+        >
+          Customer Portal
+        </p>
+        <h1
+          class="mt-1 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl"
+        >
+          Welcome back,
+          <span
+            class="bg-gradient-to-r from-teal via-emerald-500 to-lime bg-clip-text text-transparent"
+            >{{ user.first_name|default:user.username }}</span
+          >
         </h1>
-        <p class="mt-1 text-sm text-slate-500">Browse verified supplies, connect with healthcare providers, and track your orders — all in one place.</p>
+        <p class="mt-1 text-sm text-slate-500">
+          Browse verified supplies, connect with healthcare providers, and track
+          your orders — all in one place.
+        </p>
       </div>
 
       <!-- Stat strip -->
       <div class="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div class="rounded-2xl border border-slate-200 bg-white p-5">
-          <p class="font-mono text-[11px] uppercase text-slate-400">Total Orders</p>
-          <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ total_orders }}</p>
+          <p class="font-mono text-[11px] uppercase text-slate-400">
+            Total Orders
+          </p>
+          <p class="mt-1 text-2xl font-extrabold text-slate-900">
+            {{ total_orders }}
+          </p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-5">
-          <p class="font-mono text-[11px] uppercase text-slate-400">Items in Cart</p>
-          <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ cart_item_count }}</p>
+          <p class="font-mono text-[11px] uppercase text-slate-400">
+            Items in Cart
+          </p>
+          <p class="mt-1 text-2xl font-extrabold text-slate-900">
+            {{ cart_item_count }}
+          </p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-5">
-          <p class="font-mono text-[11px] uppercase text-slate-400">Categories</p>
-          <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ categories|length }}</p>
+          <p class="font-mono text-[11px] uppercase text-slate-400">
+            Categories
+          </p>
+          <p class="mt-1 text-2xl font-extrabold text-slate-900">
+            {{ categories|length }}
+          </p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-5">
-          <p class="font-mono text-[11px] uppercase text-slate-400">Verified Doctors</p>
-          <p class="mt-1 text-2xl font-extrabold text-slate-900">{{ total_doctors }}</p>
+          <p class="font-mono text-[11px] uppercase text-slate-400">
+            Verified Doctors
+          </p>
+          <p class="mt-1 text-2xl font-extrabold text-slate-900">
+            {{ total_doctors }}
+          </p>
         </div>
       </div>
 
       <!-- ============= CATALOG ============= -->
       <section id="catalog" class="scroll-mt-28">
         <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
-          <h2 class="text-xl font-extrabold text-slate-900">Browse Supplies</h2>
-          <form method="get" class="flex items-center gap-2">
-            {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
-            <input type="text" name="q" value="{{ query }}" placeholder="Search products…"
-                   class="w-48 rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-teal focus:outline-none sm:w-64">
-            <button type="submit" class="shrink-0 rounded-xl bg-ink px-4 py-2 text-xs font-bold text-white hover:bg-teal">Search</button>
-          </form>
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-900">
+              Browse Supplies
+            </h2>
+            <p class="mt-1 text-xs text-slate-500">
+              Use the smart search above for products, symptoms, and intent.
+            </p>
+          </div>
+          <a
+            href="{% url 'home' %}#search-results-section"
+            class="rounded-xl bg-ink px-4 py-2.5 text-xs font-extrabold text-white hover:bg-teal"
+            >Search the catalog</a
+          >
         </div>
 
         <!-- Category chips -->
         <div class="mb-6 flex flex-wrap gap-2">
-          <a href="?{% if query %}q={{ query }}{% endif %}#catalog"
-             class="rounded-full border px-4 py-1.5 text-xs font-bold transition
-               {% if not selected_category %} border-ink bg-ink text-white {% else %} border-slate-300 text-slate-600 hover:border-teal hover:text-teal {% endif %}">
+          <a
+            href="?{% if query %}q={{ query }}{% endif %}#catalog"
+            class="rounded-full border px-4 py-1.5 text-xs font-bold transition {% if not selected_category %} border-ink bg-ink text-white {% else %} border-slate-300 text-slate-600 hover:border-teal hover:text-teal {% endif %}"
+          >
             All
           </a>
           {% for cat in categories %}
-            <a href="?category={{ cat.id }}{% if query %}&q={{ query }}{% endif %}#catalog"
-               class="rounded-full border px-4 py-1.5 text-xs font-bold transition
-                 {% if selected_category|stringformat:'s' == cat.id|stringformat:'s' %} border-ink bg-ink text-white {% else %} border-slate-300 text-slate-600 hover:border-teal hover:text-teal {% endif %}">
-              {{ cat.name }}
-            </a>
+          <a
+            href="?category={{ cat.id }}{% if query %}&q={{ query }}{% endif %}#catalog"
+            class="rounded-full border px-4 py-1.5 text-xs font-bold transition {% if selected_category|stringformat:'s' == cat.id|stringformat:'s' %} border-ink bg-ink text-white {% else %} border-slate-300 text-slate-600 hover:border-teal hover:text-teal {% endif %}"
+          >
+            {{ cat.name }}
+          </a>
           {% endfor %}
         </div>
 
         <!-- Product grid -->
-        <div id="product-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        <div
+          id="product-grid"
+          class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+        >
           {% for product in products %}
-            <div class="product-card flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md {% if forloop.counter > 6 %}hidden{% endif %}">
-              <div>
-                <div class="relative mb-3 h-40 w-full overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
-                  {% if product.is_regulated %}
-                    <span class="absolute left-3 top-3 z-10 rounded-full bg-lime-400 px-2.5 py-1 font-mono text-[9px] font-extrabold text-slate-900">2-8°C Lock</span>
-                  {% endif %}
-                  {% if product.image_url %}
-                    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="h-full w-full object-cover">
-                  {% endif %}
-                </div>
-                <p class="font-mono text-[10px] font-bold uppercase tracking-wider text-teal-600">{{ product.category.name }}</p>
-                <h3 class="mt-1 text-sm font-extrabold leading-snug text-slate-900">{{ product.name }}</h3>
-                {% if product.dosage %}<p class="mt-1 text-xs text-slate-500">{{ product.dosage }}</p>{% endif %}
-              </div>
-
-              <div class="mt-4 border-t border-slate-100 pt-3">
-                <div class="mb-3 flex items-center justify-between">
-                  <span class="text-sm font-extrabold text-slate-900">${{ product.price }}</span>
-                  {% if product.stock > 5 %}
-                    <span class="text-xs font-bold text-emerald-600">In Stock</span>
-                  {% elif product.stock > 0 %}
-                    <span class="text-xs font-bold text-amber-600">Low Stock ({{ product.stock }})</span>
-                  {% else %}
-                    <span class="text-xs font-bold text-rose-600">Out of Stock</span>
-                  {% endif %}
-                </div>
-
-                {% if product.stock > 0 %}
-                  <form method="post" action="{% url 'add_to_cart' product.id %}" class="flex items-center gap-2">
-                    {% csrf_token %}
-                    <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}"
-                           class="w-14 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-xs focus:border-teal focus:outline-none">
-                    <button type="submit" class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-teal-600">
-                      Add to Cart
-                    </button>
-                  </form>
-                {% else %}
-                  <button disabled class="w-full cursor-not-allowed rounded-lg bg-slate-200 px-3 py-2 text-xs font-extrabold text-slate-400">
-                    Unavailable
-                  </button>
+          <div
+            class="product-card flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md {% if forloop.counter > 6 %}hidden{% endif %}"
+          >
+            <div>
+              <div
+                class="relative mb-3 h-40 w-full overflow-hidden rounded-xl border border-slate-100 bg-slate-50"
+              >
+                {% if product.is_regulated %}
+                <span
+                  class="absolute left-3 top-3 z-10 rounded-full bg-lime-400 px-2.5 py-1 font-mono text-[9px] font-extrabold text-slate-900"
+                  >2-8°C Lock</span
+                >
+                {% endif %} {% if product.image_url %}
+                <img
+                  src="{{ product.image_url }}"
+                  alt="{{ product.name }}"
+                  class="h-full w-full object-cover"
+                />
                 {% endif %}
               </div>
+              <p
+                class="font-mono text-[10px] font-bold uppercase tracking-wider text-teal-600"
+              >
+                {{ product.category.name }}
+              </p>
+              <h3
+                class="mt-1 text-sm font-extrabold leading-snug text-slate-900"
+              >
+                {{ product.name }}
+              </h3>
+              {% if product.dosage %}
+              <p class="mt-1 text-xs text-slate-500">{{ product.dosage }}</p>
+              {% endif %}
             </div>
+
+            <div class="mt-4 border-t border-slate-100 pt-3">
+              <div class="mb-3 flex items-center justify-between">
+                <span class="text-sm font-extrabold text-slate-900"
+                  >${{ product.price }}</span
+                >
+                {% if product.stock > 5 %}
+                <span class="text-xs font-bold text-emerald-600">In Stock</span>
+                {% elif product.stock > 0 %}
+                <span class="text-xs font-bold text-amber-600"
+                  >Low Stock ({{ product.stock }})</span
+                >
+                {% else %}
+                <span class="text-xs font-bold text-rose-600"
+                  >Out of Stock</span
+                >
+                {% endif %}
+              </div>
+
+              {% if product.stock > 0 %}
+              <form
+                method="post"
+                action="{% url 'add_to_cart' product.id %}"
+                class="flex items-center gap-2"
+              >
+                {% csrf_token %}
+                <input
+                  type="number"
+                  name="quantity"
+                  value="1"
+                  min="1"
+                  max="{{ product.stock }}"
+                  class="w-14 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-xs focus:border-teal focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-teal-600"
+                >
+                  Add to Cart
+                </button>
+              </form>
+              {% else %}
+              <button
+                disabled
+                class="w-full cursor-not-allowed rounded-lg bg-slate-200 px-3 py-2 text-xs font-extrabold text-slate-400"
+              >
+                Unavailable
+              </button>
+              {% endif %}
+            </div>
+          </div>
           {% empty %}
-            <p class="col-span-full py-12 text-center text-sm text-slate-500">No products match your search.</p>
+          <p class="col-span-full py-12 text-center text-sm text-slate-500">
+            No products match your search.
+          </p>
           {% endfor %}
         </div>
 
         {% if products|length > 6 %}
-          <div class="mt-6 flex justify-center">
-            <button type="button" id="show-more-products-btn"
-                    class="rounded-xl border border-slate-300 bg-white px-6 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">
-              Show More ({{ products|length|add:"-6" }} more)
-            </button>
-          </div>
+        <div class="mt-6 flex justify-center">
+          <button
+            type="button"
+            id="show-more-products-btn"
+            class="rounded-xl border border-slate-300 bg-white px-6 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal"
+          >
+            Show More ({{ products|length|add:"-6" }} more)
+          </button>
+        </div>
         {% endif %}
       </section>
 
       <!-- ============= BROWSE DOCTORS ============= -->
-      <section id="doctors" class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10">
+      <section
+        id="doctors"
+        class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10"
+      >
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 class="text-xl font-extrabold text-slate-900">Browse Doctors</h2>
-            <p class="mt-1 text-xs text-slate-500">Verified healthcare providers available for consultation</p>
+            <h2 class="text-xl font-extrabold text-slate-900">
+              Browse Doctors
+            </h2>
+            <p class="mt-1 text-xs text-slate-500">
+              Verified healthcare providers available for consultation
+            </p>
           </div>
-
-          <form method="get" class="flex flex-wrap items-center gap-2">
-            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
-            {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
-            <input type="text" name="doctor_q" value="{{ doctor_query }}" placeholder="Search by name or specialty…"
-                   class="w-52 rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-teal focus:outline-none">
-            <select name="specialty" class="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-600 focus:border-teal focus:outline-none">
-              <option value="">All Specialties</option>
-              {% for spec in specialties %}
-                <option value="{{ spec }}" {% if spec == selected_specialty %}selected{% endif %}>{{ spec }}</option>
-              {% endfor %}
-            </select>
-            <button type="submit" class="shrink-0 rounded-xl bg-ink px-4 py-2 text-xs font-bold text-white hover:bg-teal">Search</button>
-            {% if doctor_query or selected_specialty %}
-              <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}{% endif %}#doctors"
-                 class="text-xs font-bold text-slate-500 hover:text-rose-600">Clear</a>
-            {% endif %}
-          </form>
+          <a
+            href="#doctors"
+            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-extrabold text-slate-700 hover:border-teal hover:text-teal"
+            >View all specialists</a
+          >
         </div>
 
-        <div id="doctor-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        <div
+          id="doctor-grid"
+          class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+        >
           {% for provider in doctors %}
-            <div class="doctor-card flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md {% if forloop.counter > 6 %}hidden{% endif %}">
-              <div>
-                <div class="mb-3 flex items-center gap-3">
-                  <img src="https://ui-avatars.com/api/?name={{ provider.user.get_full_name|default:provider.user.username|urlencode }}&background=0D9488&color=fff&bold=true"
-                       alt="Dr. {{ provider.user.get_full_name|default:provider.user.username }}"
-                       class="h-12 w-12 shrink-0 rounded-full border border-slate-200 object-cover shadow-sm">
-                  <div class="min-w-0">
-                    <span class="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-800">
-                      {{ provider.credential_status|default:"Verified" }}
-                    </span>
-                    <h3 class="mt-0.5 truncate text-sm font-bold text-slate-900">
-                      Dr. {{ provider.user.get_full_name|default:provider.user.username }}
-                    </h3>
-                  </div>
+          <div
+            class="doctor-card flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md {% if forloop.counter > 6 %}hidden{% endif %}"
+          >
+            <div>
+              <div class="mb-3 flex items-center gap-3">
+                <img
+                  src="https://ui-avatars.com/api/?name={{ provider.user.get_full_name|default:provider.user.username|urlencode }}&background=0D9488&color=fff&bold=true"
+                  alt="Dr. {{ provider.user.get_full_name|default:provider.user.username }}"
+                  class="h-12 w-12 shrink-0 rounded-full border border-slate-200 object-cover shadow-sm"
+                />
+                <div class="min-w-0">
+                  <span
+                    class="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-800"
+                  >
+                    {{ provider.credential_status|default:"Verified" }}
+                  </span>
+                  <h3 class="mt-0.5 truncate text-sm font-bold text-slate-900">
+                    Dr. {{
+                    provider.user.get_full_name|default:provider.user.username
+                    }}
+                  </h3>
                 </div>
+              </div>
 
-                <p class="text-xs font-semibold text-teal-600">{{ provider.specialty }}</p>
-                <p class="mt-1 text-[11px] text-slate-500">{{ provider.degrees }} • {{ provider.experience_years }} yrs experience</p>
+              <p class="text-xs font-semibold text-teal-600">
+                {{ provider.specialty }}
+              </p>
+              <p class="mt-1 text-[11px] text-slate-500">
+                {{ provider.degrees }} • {{ provider.experience_years }} yrs
+                experience
+              </p>
 
-                <div class="mt-2 flex flex-wrap gap-1.5">
-                  {% if provider.consultation_type %}
-                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">{{ provider.consultation_type }}</span>
-                  {% endif %}
-                  {% if provider.budget_tier %}
-                    <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">{{ provider.budget_tier }}</span>
-                  {% endif %}
-                </div>
-
-                {% if provider.bio %}
-                  <p class="mt-3 line-clamp-3 text-xs leading-relaxed text-slate-600">{{ provider.bio }}</p>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                {% if provider.consultation_type %}
+                <span
+                  class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600"
+                  >{{ provider.consultation_type }}</span
+                >
+                {% endif %} {% if provider.budget_tier %}
+                <span
+                  class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600"
+                  >{{ provider.budget_tier }}</span
+                >
                 {% endif %}
               </div>
 
-              <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                <div>
-                  <span class="font-mono text-xs font-bold text-slate-900">${{ provider.consultation_fee }}</span>
-                  <span class="text-[10px] text-slate-400"> / session</span>
-                </div>
-                {% if provider.user.email %}
-                  <a href="mailto:{{ provider.user.email }}?subject=Consultation%20Request"
-                     class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-900">
-                    Book Visit
-                  </a>
-                {% else %}
-                  <button disabled class="cursor-not-allowed rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-400">
-                    Book Visit
-                  </button>
-                {% endif %}
-              </div>
+              {% if provider.bio %}
+              <p
+                class="mt-3 line-clamp-3 text-xs leading-relaxed text-slate-600"
+              >
+                {{ provider.bio }}
+              </p>
+              {% endif %}
             </div>
+
+            <div
+              class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3"
+            >
+              <div>
+                <span class="font-mono text-xs font-bold text-slate-900"
+                  >${{ provider.consultation_fee }}</span
+                >
+                <span class="text-[10px] text-slate-400"> / session</span>
+              </div>
+              {% if provider.user.email %}
+              <a
+                href="mailto:{{ provider.user.email }}?subject=Consultation%20Request"
+                class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-900"
+              >
+                Book Visit
+              </a>
+              {% else %}
+              <button
+                disabled
+                class="cursor-not-allowed rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-400"
+              >
+                Book Visit
+              </button>
+              {% endif %}
+            </div>
+          </div>
           {% empty %}
-            <p class="col-span-full py-12 text-center text-sm text-slate-500">No doctors match your search right now.</p>
+          <p class="col-span-full py-12 text-center text-sm text-slate-500">
+            No doctors match your search right now.
+          </p>
           {% endfor %}
         </div>
 
         {% if doctors|length > 6 %}
-          <div class="mt-6 flex justify-center">
-            <button type="button" id="show-more-doctors-btn"
-                    class="rounded-xl border border-slate-300 bg-white px-6 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">
-              Show More Doctors ({{ doctors|length|add:"-6" }} more)
-            </button>
-          </div>
+        <div class="mt-6 flex justify-center">
+          <button
+            type="button"
+            id="show-more-doctors-btn"
+            class="rounded-xl border border-slate-300 bg-white px-6 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal"
+          >
+            Show More Doctors ({{ doctors|length|add:"-6" }} more)
+          </button>
+        </div>
         {% endif %}
       </section>
 
       <!-- ============= ORDER HISTORY ============= -->
-      <section id="orders" class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10">
-        <h2 class="mb-5 text-xl font-extrabold text-slate-900">Order History</h2>
+      <section
+        id="orders"
+        class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10"
+      >
+        <h2 class="mb-5 text-xl font-extrabold text-slate-900">
+          Order History
+        </h2>
         {% if orders %}
-          <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-            <table class="w-full text-left text-sm">
-              <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th class="px-5 py-3 font-bold">Order</th>
-                  <th class="px-5 py-3 font-bold">Date</th>
-                  <th class="px-5 py-3 font-bold">Items</th>
-                  <th class="px-5 py-3 font-bold">Total</th>
-                  <th class="px-5 py-3 font-bold">Status</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                {% for order in orders %}
-                  <tr class="hover:bg-slate-50/60">
-                    <td class="px-5 py-3 font-mono text-xs font-bold text-slate-900">#{{ order.id }}</td>
-                    <td class="px-5 py-3 text-slate-600">{{ order.created_at|date:"M d, Y" }}</td>
-                    <td class="px-5 py-3 text-slate-600">
-                      {% for item in order.items.all %}{{ item.quantity }}× {{ item.product.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
-                    </td>
-                    <td class="px-5 py-3 font-bold text-slate-900">${{ order.total }}</td>
-                    <td class="px-5 py-3">
-                      <span class="rounded-full px-2.5 py-1 text-[11px] font-bold
-                        {% if order.status == 'Completed' %} bg-emerald-100 text-emerald-700
-                        {% elif order.status == 'Cancelled' %} bg-rose-100 text-rose-700
-                        {% elif order.status == 'Processing' %} bg-amber-100 text-amber-700
-                        {% else %} bg-slate-100 text-slate-600 {% endif %}">
-                        {{ order.status }}
-                      </span>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+        <div
+          class="overflow-x-auto rounded-2xl border border-slate-200 bg-white"
+        >
+          <table class="w-full text-left text-sm">
+            <thead
+              class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500"
+            >
+              <tr>
+                <th class="px-5 py-3 font-bold">Order</th>
+                <th class="px-5 py-3 font-bold">Date</th>
+                <th class="px-5 py-3 font-bold">Items</th>
+                <th class="px-5 py-3 font-bold">Total</th>
+                <th class="px-5 py-3 font-bold">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for order in orders %}
+              <tr class="hover:bg-slate-50/60">
+                <td
+                  class="px-5 py-3 font-mono text-xs font-bold text-slate-900"
+                >
+                  #{{ order.id }}
+                </td>
+                <td class="px-5 py-3 text-slate-600">
+                  {{ order.created_at|date:"M d, Y" }}
+                </td>
+                <td class="px-5 py-3 text-slate-600">
+                  {% for item in order.items.all %}
+                    {{ item.quantity }}x {{ item.product.name }}{% if not forloop.last %}, {% endif %}
+                  {% endfor %}
+                </td>
+                <td class="px-5 py-3 font-bold text-slate-900">
+                  ${{ order.total }}
+                </td>
+                <td class="px-5 py-3">
+                  <span
+                    class="rounded-full px-2.5 py-1 text-[11px] font-bold {% if order.status == 'Completed' %} bg-emerald-100 text-emerald-700 {% elif order.status == 'Cancelled' %} bg-rose-100 text-rose-700 {% elif order.status == 'Processing' %} bg-amber-100 text-amber-700 {% else %} bg-slate-100 text-slate-600 {% endif %}"
+                  >
+                    {{ order.status }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
         {% else %}
-          <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
-            <p class="text-sm text-slate-500">You haven't placed any orders yet.</p>
-          </div>
+        <div
+          class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center"
+        >
+          <p class="text-sm text-slate-500">
+            You haven't placed any orders yet.
+          </p>
+        </div>
         {% endif %}
       </section>
-
     </main>
   </div>
 </div>
@@ -368,14 +641,16 @@
   function wireShowMore(buttonId, cardSelector) {
     const btn = document.getElementById(buttonId);
     if (!btn) return;
-    btn.addEventListener('click', function () {
-      document.querySelectorAll(cardSelector + '.hidden').forEach(function (card) {
-        card.classList.remove('hidden');
-      });
+    btn.addEventListener("click", function () {
+      document
+        .querySelectorAll(cardSelector + ".hidden")
+        .forEach(function (card) {
+          card.classList.remove("hidden");
+        });
       this.remove();
     });
   }
-  wireShowMore('show-more-products-btn', '#product-grid .product-card');
-  wireShowMore('show-more-doctors-btn', '#doctor-grid .doctor-card');
+  wireShowMore("show-more-products-btn", "#product-grid .product-card");
+  wireShowMore("show-more-doctors-btn", "#doctor-grid .doctor-card");
 </script>
 {% endblock %}

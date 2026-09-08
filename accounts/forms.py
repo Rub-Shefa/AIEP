@@ -113,3 +113,43 @@ class CustomUserCreationForm(UserCreationForm):
 class RegisterForm(CustomUserCreationForm):
     """Maintains backward compatibility across imports"""
     pass
+
+
+class CustomerProfileForm(forms.ModelForm):
+    class Meta:
+        model = models.CustomerProfile
+        fields = ('avatar_image', 'phone_number', 'occupation', 'location', 'health_preferences')
+        widgets = {
+            'avatar_image': forms.FileInput(attrs={'class': 'hidden', 'accept': 'image/png,image/jpeg,image/webp'}),
+            'phone_number': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': '017XXXXXXXX'}),
+            'occupation': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'Student, professional, etc.'}),
+            'location': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'City, country'}),
+            'health_preferences': forms.Textarea(attrs={'class': INPUT_STYLE, 'rows': 4, 'placeholder': 'Optional preferences that help us personalize your experience'}),
+        }
+
+
+class CustomerAccountForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name')
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'First name'}),
+            'last_name': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'Last name'}),
+        }
+
+
+class CustomerSettingsAccountForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('username', 'email')
+        widgets = {
+            'username': forms.TextInput(attrs={'class': INPUT_STYLE, 'placeholder': 'username'}),
+            'email': forms.EmailInput(attrs={'class': INPUT_STYLE, 'placeholder': 'name@example.com'}),
+        }
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+        qs = User.objects.filter(username__iexact=username).exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise ValidationError("That username is already taken.")
+        return username
