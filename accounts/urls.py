@@ -13,6 +13,7 @@ urlpatterns = [
     path('seller-dashboard/', views.seller_dashboard_view, name='seller_dashboard'),
     path('provider-dashboard/', views.provider_dashboard_view, name='provider_dashboard'),
     path('courier-dashboard/', views.courier_dashboard_view, name='courier_dashboard'),
+    path('dashboard/', views.dashboard_redirect_view, name='dashboard'),
 
     # Provider pages
     path('provider-profile/', views.provider_profile_view, name='provider_profile'),

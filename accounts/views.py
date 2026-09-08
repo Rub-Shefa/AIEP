@@ -17,14 +17,44 @@ from orders.cart import Cart
 
 def home(request):
     categories = Category.objects.all()
-    products = Product.objects.all()
     providers = ProviderProfile.objects.all()
+
+    search_query = request.GET.get('q', '').strip()
+    ai_search_used = False
+
+    if search_query:
+        # Pass 1: exact/partial keyword match (fast, no AI call).
+        products = Product.objects.filter(
+            Q(name__icontains=search_query) |
+            Q(category__name__icontains=search_query) |
+            Q(dosage__icontains=search_query)
+        ).select_related('category')
+
+        # Pass 2: nothing matched by keyword -> ask the AI to reason about
+        # the catalog semantically (e.g. "headache" -> "Paracetamol").
+        if not products.exists():
+            from ai_communication.ai_search import ai_semantic_product_search
+            all_products = Product.objects.select_related('category').all()
+            products = ai_semantic_product_search(search_query, all_products)
+            ai_search_used = bool(products)
+    else:
+        products = Product.objects.all()
+
     context = {
         'categories': categories,
         'products': products,
         'providers': providers,
+        'search_query': search_query,
+        'ai_search_used': ai_search_used,
     }
     return render(request, 'accounts/home.html', context)
+
+
+@login_required
+def dashboard_redirect_view(request):
+    """Single generic 'go to my dashboard' link that works for every role,
+    so templates never need to know which specific dashboard a user belongs to."""
+    return redirect_based_on_role(request.user)
 
 def is_admin(user):
     return user.is_staff or user.is_superuser

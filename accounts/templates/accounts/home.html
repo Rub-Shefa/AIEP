@@ -32,7 +32,7 @@
           <!-- Interactive Slide-Fill Buttons -->
           <div class="flex flex-wrap items-center gap-4 pt-2">
             {% if user.is_authenticated %}
-              <a href="#" class="btn-slide-left rounded-xl bg-lime px-7 py-3.5 text-sm font-extrabold text-ink shadow-lg shadow-lime/20 hover:text-white hover:shadow-teal/30">
+              <a href="{% url 'dashboard' %}" class="btn-slide-left rounded-xl bg-lime px-7 py-3.5 text-sm font-extrabold text-ink shadow-lg shadow-lime/20 hover:text-white hover:shadow-teal/30">
                 <span>Go to Dashboard</span>
               </a>
             {% else %}
@@ -120,13 +120,47 @@
   </section>
 
  <!-- Browse Supply Categories Section -->
-<section class="max-w-7xl mx-auto px-6 py-10 sm:px-12">
+<section id="search-results-section" class="max-w-7xl mx-auto px-6 py-10 sm:px-12 scroll-mt-6">
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h2 class="text-2xl font-extrabold text-slate-900">Browse Supply Categories</h2>
-      <p class="text-xs text-slate-500 mt-1">Select a category to view instant stock availability</p>
+      <h2 class="text-2xl font-extrabold text-slate-900">
+        {% if search_query %}Search Results for "{{ search_query }}"{% else %}Browse Supply Categories{% endif %}
+      </h2>
+      <p class="text-xs text-slate-500 mt-1">
+        {% if ai_search_used %}
+          <span class="inline-flex items-center gap-1 rounded-full bg-teal/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-teal">
+            ✨ AI Semantic Search — matched symptoms/intents to catalog products
+          </span>
+          · <a href="{% url 'home' %}" class="font-semibold text-teal hover:underline">Clear Search</a>
+        {% elif search_query %}
+          {{ products|length }} result{{ products|length|pluralize }} found
+          · <a href="{% url 'home' %}" class="font-semibold text-teal hover:underline">Clear Search</a>
+        {% else %}
+          Select a category to view instant stock availability
+        {% endif %}
+      </p>
     </div>
   </div>
+
+  {% if search_query and not products %}
+    <!-- High-Visibility Zero Results Card -->
+    <div class="mb-8 rounded-2xl border border-amber-200 bg-amber-50/80 p-6 text-slate-800 shadow-sm">
+      <div class="flex items-start gap-4">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-700">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold text-amber-900">No product matches for "{{ search_query }}"</h3>
+          <p class="mt-1 text-xs leading-relaxed text-amber-800">
+            Our AI searched the inventory for symptoms or terms related to <strong>"{{ search_query }}"</strong>, but no matching medications or supplies are currently stocked in the catalog.
+          </p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <a href="{% url 'home' %}" class="rounded-lg bg-amber-900 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-slate-900">Clear Search Filter</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 
   <!-- Categories Grid -->
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4" id="category-grid">
@@ -252,8 +286,9 @@
 </script>
 
 <!-- Featured Operational Supplies Grid -->
-<section class="max-w-7xl mx-auto px-6 py-8 sm:px-12">
-  <div class="flex items-center justify-between mb-6">
+<!-- Featured Operational Supplies Grid -->
+<section id="featured-products-section" class="max-w-7xl mx-auto px-6 py-8 sm:px-12 scroll-mt-24">
+    <div class="flex items-center justify-between mb-6">
     <div>
       <h2 class="text-2xl font-extrabold text-slate-900">Featured Operational Supplies</h2>
       <p class="text-xs text-slate-500 mt-1">Real-time inventory levels from verified distributors</p>
@@ -400,35 +435,6 @@
   </div>
   {% endif %}
 </section>
-
-<!-- Toggle Script for Providers -->
-<script>
-  function toggleProviders() {
-    const hiddenProviders = document.querySelectorAll('.provider-card');
-    const btnText = document.getElementById('doc-btn-text');
-    const btnIcon = document.getElementById('doc-btn-icon');
-    let isExpanded = false;
-
-    hiddenProviders.forEach((card, index) => {
-      if (index >= 4) {
-        if (card.classList.contains('hidden')) {
-          card.classList.remove('hidden');
-          isExpanded = true;
-        } else {
-          card.classList.add('hidden');
-        }
-      }
-    });
-
-    if (isExpanded) {
-      btnText.innerText = "Show Less";
-      btnIcon.classList.add('rotate-180');
-    } else {
-      btnText.innerText = "Show More Doctors";
-      btnIcon.classList.remove('rotate-180');
-    }
-  }
-</script>
 
 <!-- Toggle Script for Providers -->
 <script>
@@ -662,4 +668,34 @@
     100% { box-shadow: 0 0 22px rgba(217, 255, 93, 0.95); }
   }
 </style>
+<!-- Auto-Scroll to Results on Query & Search Form Loading Indicator -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Scroll directly to the Product Results grid when a query is submitted
+    {% if search_query %}
+      const targetSection = document.getElementById("featured-products-section") || document.getElementById("search-results-section");
+      if (targetSection) {
+        targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    {% endif %}
+
+    // Add loading feedback on search forms during AI requests
+    const searchForms = document.querySelectorAll('form[action="{% url "home" %}"]');
+    searchForms.forEach(form => {
+      form.addEventListener("submit", function () {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `
+            <svg class="animate-spin h-4 w-4 text-white inline-block mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Searching...
+          `;
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}
