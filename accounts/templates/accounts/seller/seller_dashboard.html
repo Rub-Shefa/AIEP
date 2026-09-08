@@ -19,7 +19,7 @@
     </div>
   {% endif %}
 
-  <!-- Mobile section nav (sidebar is hidden below lg) -->
+  <!-- Mobile section nav -->
   <div class="mb-6 -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:hidden">
     <a href="#overview" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">Overview</a>
     <a href="#products" class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600">Products</a>
@@ -30,7 +30,7 @@
 
   <div class="flex items-start gap-8">
 
-    <!-- ============= SIDEBAR ============= -->
+    <!-- Sidebar -->
     <aside class="sticky top-[96px] hidden w-72 shrink-0 self-start lg:block">
       <div class="overflow-hidden rounded-3xl border border-slate-800 bg-ink text-white shadow-xl">
 
@@ -108,7 +108,7 @@
       </div>
     </aside>
 
-    <!-- ============= MAIN CONTENT ============= -->
+    <!-- Main Content -->
     <main class="min-w-0 flex-1">
 
       <!-- Header -->
@@ -171,7 +171,7 @@
         </div>
       {% endif %}
 
-      <!-- ============= MY PRODUCTS ============= -->
+      <!-- My Products -->
       <section id="products" class="scroll-mt-28">
         <div class="mb-5 flex items-center justify-between">
           <h2 class="text-xl font-extrabold text-slate-900">My Products</h2>
@@ -196,7 +196,10 @@
                   <tr class="hover:bg-slate-50/60">
                     <td class="px-5 py-3">
                       <div class="flex items-center gap-3">
-                        <img src="{{ product.image_url }}" alt="" class="h-10 w-10 rounded-lg object-cover border border-slate-200">
+                        <img src="{{ product.display_image }}"
+                             alt="{{ product.name }}"
+                             class="h-10 w-10 rounded-lg object-cover border border-slate-200"
+                             onerror="this.onerror=null;this.src='https://placehold.co/100x100/e2e8f0/64748b?text=Item';">
                         <div>
                           <p class="font-bold text-slate-900">{{ product.name|truncatechars:40 }}</p>
                           {% if product.is_regulated %}<p class="text-[11px] font-bold text-rose-500">Regulated item</p>{% endif %}
@@ -241,7 +244,7 @@
         {% endif %}
       </section>
 
-      <!-- ============= RECENT ORDERS ============= -->
+      <!-- Order History -->
       <section id="orders" class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10">
         <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
           <h2 class="text-xl font-extrabold text-slate-900">Order History</h2>
@@ -320,7 +323,7 @@
         {% endif %}
       </section>
 
-      <!-- ============= DELIVERY JOBS ============= -->
+      <!-- Delivery Jobs -->
       <section id="jobs" class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10">
         <h2 class="mb-5 text-xl font-extrabold text-slate-900">Open Delivery Jobs & Bids</h2>
         {% if open_jobs %}
@@ -382,7 +385,7 @@
           </div>
         {% endif %}
 
-        <!-- Assigned deliveries -->
+        <!-- Assigned Deliveries -->
         {% if assigned_jobs %}
           <h3 class="mb-3 mt-10 font-mono text-xs font-bold uppercase tracking-widest text-slate-500">Assigned Deliveries</h3>
           <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -418,7 +421,7 @@
         {% endif %}
       </section>
 
-      <!-- ============= TOP SELLERS ============= -->
+      <!-- Top Sellers -->
       {% if top_products %}
         <section id="top-sellers" class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10">
           <h2 class="mb-5 text-xl font-extrabold text-slate-900">Top Sellers</h2>
