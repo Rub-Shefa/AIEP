@@ -497,6 +497,7 @@
         </a>
 
         <!-- Centered Search Bar (Daraz/Shein style) -->
+        {% if request.resolver_match.url_name != 'admin_dashboard' %}
         <form
           method="get"
           action="{% url 'home' %}"
@@ -530,6 +531,9 @@
             Search
           </button>
         </form>
+        {% else %}
+        <div class="mx-auto hidden w-full max-w-xl lg:block"></div>
+        {% endif %}
 
         <!-- Universal Navigation Controls -->
         <div class="flex shrink-0 items-center gap-3">

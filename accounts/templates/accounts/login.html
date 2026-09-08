@@ -70,8 +70,11 @@
         </div>
       {% endif %}
 
-      <form method="post" class="space-y-5">
+      <form method="post" hx-boost="false" class="space-y-5">
         {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
         <div>
           <label for="username" class="mb-2 block font-mono text-xs font-semibold uppercase tracking-wider text-slate-600">Username</label>
           <input id="username" type="text" name="username" required autocomplete="username" placeholder="Enter your username" class="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3.5 text-sm text-ink transition focus:border-teal focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal/10">
@@ -90,7 +93,7 @@
 
       <div class="border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
         New to the platform?
-        <a href="{% url 'register' %}" class="ml-1 font-extrabold text-teal hover:underline hover:underline-offset-4">Create an account</a>
+        <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="ml-1 font-extrabold text-teal hover:underline hover:underline-offset-4">Create an account</a>
       </div>
     </div>
   </section>

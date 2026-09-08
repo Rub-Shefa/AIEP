@@ -1,12 +1,14 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
 
 from .knowledge_base import FAQ_ENTRIES, get_ai_response
 from .models import AIQueryLog
 
 CHAT_SESSION_KEY = "ai_assistant_chat"
+BACK_URL_SESSION_KEY = "ai_assistant_back_url"
 
 
 def _handle_query(request, query_text):
@@ -59,6 +61,18 @@ def _source_interface(request):
 def assistant_view(request):
     chat_history = request.session.get(CHAT_SESSION_KEY, [])
 
+    if request.method == "GET":
+        referer = request.META.get("HTTP_REFERER")
+        current_url = request.build_absolute_uri()
+        if (
+            referer
+            and reverse("ai_assistant") not in referer
+            and referer != current_url
+            and url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()})
+        ):
+            request.session[BACK_URL_SESSION_KEY] = referer
+            request.session.modified = True
+
     if request.method == "POST":
         query_text = request.POST.get("query", "").strip()
         if query_text:
@@ -70,6 +84,7 @@ def assistant_view(request):
     context = {
         "chat_history": chat_history,
         "faq_entries": FAQ_ENTRIES,
+        "assistant_back_url": request.session.get(BACK_URL_SESSION_KEY, reverse("dashboard")),
     }
     return render(request, "ai_communication/assistant.html", context)
 

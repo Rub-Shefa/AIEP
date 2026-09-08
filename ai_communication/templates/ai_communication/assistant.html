@@ -37,12 +37,17 @@
       <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">AI Assistant</h1>
       <p class="mt-1 text-sm text-slate-500">Ask about orders, appointments, deliveries, or your account — instant answers, no wait.</p>
     </div>
-    <form method="post" action="{% url 'ai_assistant_clear' %}">
-      {% csrf_token %}
-      <button type="submit" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">
-        Clear chat
-      </button>
-    </form>
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{{ assistant_back_url }}" class="rounded-xl bg-ink px-4 py-2.5 text-xs font-extrabold text-white transition hover:bg-teal">
+        Back to dashboard
+      </a>
+      <form method="post" action="{% url 'ai_assistant_clear' %}">
+        {% csrf_token %}
+        <button type="submit" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:border-teal hover:text-teal">
+          Clear chat
+        </button>
+      </form>
+    </div>
   </div>
 
   <!-- Chat window -->

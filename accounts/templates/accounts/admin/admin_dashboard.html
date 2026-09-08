@@ -106,6 +106,8 @@
       <a href="#users" class="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-xs font-bold text-slate-300">Users</a>
       <a href="#products" class="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-xs font-bold text-slate-300">Inventory</a>
       <a href="#deliveries" class="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-4 py-1.5 text-xs font-bold text-slate-300">Deliveries</a>
+      <a href="{% url 'customer_dashboard' %}" class="shrink-0 rounded-full border border-cyan-500/40 bg-cyan-500/10 px-4 py-1.5 text-xs font-bold text-cyan-200">Storefront</a>
+      <a href="/admin/" target="_blank" class="shrink-0 rounded-full border border-lime bg-lime px-4 py-1.5 text-xs font-extrabold text-slate-950">Django Admin</a>
     </div>
 
     <!-- HEADER -->
@@ -114,9 +116,17 @@
         <h1 class="text-2xl font-bold tracking-tight text-white">Admin Command Center</h1>
         <p class="text-xs text-slate-400">Platform-wide analytics, revenue, and operations at a glance.</p>
       </div>
-      <div class="flex items-center gap-2 self-start rounded-full border border-slate-800 bg-slate-900 px-3 py-1.5 md:self-auto">
-        <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500"></span>
-        <span class="text-xs font-medium text-emerald-400">Platform Operational</span>
+      <div class="flex flex-wrap items-center gap-2 self-start md:self-auto">
+        <a href="{% url 'customer_dashboard' %}" class="rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-xs font-bold text-cyan-200 transition hover:bg-cyan-500 hover:text-white">
+          Storefront
+        </a>
+        <a href="/admin/" target="_blank" class="rounded-xl bg-lime px-4 py-2 text-xs font-extrabold text-slate-950 transition hover:bg-cyan-400">
+          Django Admin
+        </a>
+        <div class="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-3 py-1.5">
+          <span class="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500"></span>
+          <span class="text-xs font-medium text-emerald-400">Platform Operational</span>
+        </div>
       </div>
     </header>
 
@@ -571,11 +581,23 @@
       }
     }
 
-    if (window.htmx) {
-      htmx.onLoad(renderCharts);
-    } else {
-      document.addEventListener('DOMContentLoaded', renderCharts);
+    function scheduleRender(attempt) {
+      attempt = attempt || 0;
+      if (window.Chart) {
+        renderCharts();
+        return;
+      }
+      if (attempt < 20) {
+        window.setTimeout(function () { scheduleRender(attempt + 1); }, 100);
+      }
     }
+
+    document.addEventListener('DOMContentLoaded', function () { scheduleRender(); });
+    window.addEventListener('load', function () { scheduleRender(); });
+    if (window.htmx) {
+      document.body.addEventListener('htmx:afterSettle', function () { scheduleRender(); });
+    }
+    scheduleRender();
   })();
 </script>
 {% endblock %}

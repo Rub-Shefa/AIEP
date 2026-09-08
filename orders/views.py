@@ -44,8 +44,11 @@ def _safe_redirect_back(request, fallback):
     return redirect(fallback)
 
 
-@login_required
 def add_to_cart(request, product_id):
+    if not request.user.is_authenticated:
+        messages.warning(request, "Please log in or create an account to order products.")
+        return redirect(f"{reverse('login')}?next={reverse('customer_dashboard')}")
+
     product = get_object_or_404(Product, id=product_id)
 
     try:

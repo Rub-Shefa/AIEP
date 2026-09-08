@@ -70,8 +70,11 @@
         </div>
       {% endif %}
 
-      <form method="post" class="space-y-4">
+      <form method="post" hx-boost="false" class="space-y-4">
         {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
 
         <div>
           <label for="{{ form.role.id_for_label }}" class="mb-1.5 block font-mono text-xs font-semibold uppercase tracking-wider text-slate-600">
@@ -169,7 +172,7 @@
 
       <div class="border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
         Already registered?
-        <a href="{% url 'login' %}" class="ml-1 font-extrabold text-teal hover:underline hover:underline-offset-4">Sign in to workspace</a>
+        <a href="{% url 'login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="ml-1 font-extrabold text-teal hover:underline hover:underline-offset-4">Sign in to workspace</a>
       </div>
     </div>
   </section>

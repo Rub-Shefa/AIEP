@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 from .knowledge_base import get_ai_response
 from .models import AIQueryLog
@@ -12,7 +13,8 @@ class KnowledgeBaseTests(TestCase):
         self.assertIn("Order History", result["answer"])
 
     def test_unrelated_query_falls_back(self):
-        result = get_ai_response("purple giraffe spaceship")
+        with override_settings(AI_API_KEY=""):
+            result = get_ai_response("purple giraffe spaceship")
         self.assertTrue(result["fallback_triggered"])
 
 

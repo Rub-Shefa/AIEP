@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import reverse
 from datetime import datetime, timedelta
 import base64
@@ -74,8 +75,19 @@ def redirect_based_on_role(user):
         return redirect('courier_dashboard')
     return redirect('customer_dashboard')
 
+
+def _safe_customer_next(request):
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return next_url
+    return None
+
+
 def login_view(request):
     if request.user.is_authenticated:
+        next_url = _safe_customer_next(request)
+        if next_url and not (request.user.is_staff or request.user.is_superuser):
+            return redirect(next_url)
         return redirect_based_on_role(request.user)
 
     if request.method == 'POST':
@@ -87,6 +99,9 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f"Welcome back, {username}!")
+                next_url = _safe_customer_next(request)
+                if next_url and not (user.is_staff or user.is_superuser):
+                    return redirect(next_url)
                 return redirect_based_on_role(user)
             else:
                 messages.error(request, "Invalid username or password.")
@@ -95,10 +110,13 @@ def login_view(request):
     else:
         form = AuthenticationForm()
 
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, 'accounts/login.html', {'form': form, 'next': request.GET.get('next', '')})
 
 def register_view(request):
     if request.user.is_authenticated:
+        next_url = _safe_customer_next(request)
+        if next_url and not (request.user.is_staff or request.user.is_superuser):
+            return redirect(next_url)
         return redirect_based_on_role(request.user)
 
     if request.method == 'POST':
@@ -107,6 +125,9 @@ def register_view(request):
             user = form.save()
             login(request, user)
             messages.success(request, "Account created successfully!")
+            next_url = _safe_customer_next(request)
+            if next_url and not (user.is_staff or user.is_superuser):
+                return redirect(next_url)
             return redirect_based_on_role(user)
         else:
             field_name_map = {
@@ -121,7 +142,7 @@ def register_view(request):
     else:
         form = CustomUserCreationForm()
 
-    return render(request, 'accounts/register.html', {'form': form})
+    return render(request, 'accounts/register.html', {'form': form, 'next': request.GET.get('next', '')})
 
 def logout_view(request):
     logout(request)
