@@ -22,7 +22,6 @@
     <a href="{% url 'seller_dashboard' %}" class="text-xs font-bold text-teal hover:underline">← Cancel & Return</a>
   </div>
 
-  <!-- Note: enctype="multipart/form-data" is strictly required for device uploads -->
   <form method="post" enctype="multipart/form-data" class="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
     {% csrf_token %}
 
@@ -67,17 +66,20 @@
       </div>
     </div>
 
-    <!-- Device Photo Picker -->
+    <!-- Photo Upload Section -->
     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-      <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Choose Photo From Device</label>
+      <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Photo From Device</label>
       <div class="mt-2">{{ form.image }}</div>
-      <p class="mt-1.5 text-[11px] text-slate-400">Select any PNG, JPG, or WEBP image file from your computer.</p>
+      <p class="mt-1.5 text-[11px] text-slate-400">Leave blank if you want to keep the current picture.</p>
       {% if form.image.errors %}<p class="mt-1 text-xs text-rose-600">{{ form.image.errors.0 }}</p>{% endif %}
 
       {% if product and product.display_image %}
-        <div class="mt-3 flex items-center gap-3 pt-3 border-t border-slate-200">
-          <img src="{{ product.display_image }}" class="h-12 w-12 rounded-lg object-cover border border-slate-200" alt="Current image">
-          <span class="text-xs text-slate-500">Current active photo</span>
+        <div class="mt-4 flex items-center gap-3 border-t border-slate-200 pt-3">
+          <img src="{{ product.display_image }}" class="h-14 w-14 rounded-xl object-cover border border-slate-200" alt="{{ product.name }}">
+          <div>
+            <p class="text-xs font-bold text-slate-700">Active photo</p>
+            <p class="text-[11px] text-slate-400">Uploading a new file will replace this one.</p>
+          </div>
         </div>
       {% endif %}
     </div>
