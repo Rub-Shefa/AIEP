@@ -1,85 +1,74 @@
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.db.models.deletion import ProtectedError
 from django.shortcuts import render, redirect, get_object_or_404
-
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import Product, Category
 from .forms import ProductForm
-from .models import Product
 
-
-def _get_seller_profile(request):
-    return getattr(request.user, 'seller_profile', None)
-
+def _get_seller_profile(user):
+    return getattr(user, 'seller_profile', None)
 
 @login_required
 def seller_product_add(request):
-    seller_profile = _get_seller_profile(request)
-    if seller_profile is None:
-        messages.error(request, "Only registered sellers can list products.")
+    seller = _get_seller_profile(request.user)
+    if not seller:
+        messages.error(request, "Only registered sellers can upload products.")
         return redirect('seller_dashboard')
 
     if request.method == 'POST':
-        form = ProductForm(request.POST)
+        # request.FILES is mandatory for device file uploads!
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
-            product.seller = seller_profile
+            product.seller = seller
+            if product.image:
+                product.image_url = product.image.url
             product.save()
-            messages.success(request, f'"{product.name}" was added to your catalog.')
+            messages.success(request, f"'{product.name}' was added successfully!")
             return redirect('seller_dashboard')
+        else:
+            messages.error(request, "Please correct the errors below.")
     else:
         form = ProductForm()
 
     return render(request, 'catalog/product_form.html', {
         'form': form,
-        'mode': 'add',
-        'seller_profile': seller_profile,
+        'action': 'List Product'
     })
 
-
 @login_required
-def seller_product_edit(request, product_id):
-    seller_profile = _get_seller_profile(request)
-    if seller_profile is None:
-        messages.error(request, "Only registered sellers can manage products.")
+def seller_product_edit(request, pk):
+    seller = _get_seller_profile(request.user)
+    if not seller:
+        messages.error(request, "Unauthorized.")
         return redirect('seller_dashboard')
 
-    product = get_object_or_404(Product, id=product_id, seller=seller_profile)
+    product = get_object_or_404(Product, pk=pk, seller=seller)
 
     if request.method == 'POST':
-        form = ProductForm(request.POST, instance=product)
+        form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
-            form.save()
-            messages.success(request, f'"{product.name}" was updated.')
+            updated = form.save(commit=False)
+            if updated.image:
+                updated.image_url = updated.image.url
+            updated.save()
+            messages.success(request, f"'{product.name}' updated successfully.")
             return redirect('seller_dashboard')
+        else:
+            messages.error(request, "Error updating product.")
     else:
         form = ProductForm(instance=product)
 
     return render(request, 'catalog/product_form.html', {
         'form': form,
-        'mode': 'edit',
         'product': product,
-        'seller_profile': seller_profile,
+        'action': 'Update Product'
     })
 
-
 @login_required
-def seller_product_delete(request, product_id):
-    seller_profile = _get_seller_profile(request)
-    if seller_profile is None:
-        messages.error(request, "Only registered sellers can manage products.")
-        return redirect('seller_dashboard')
-
-    product = get_object_or_404(Product, id=product_id, seller=seller_profile)
-
+def seller_product_delete(request, pk):
     if request.method == 'POST':
-        name = product.name
-        try:
-            product.delete()
-            messages.info(request, f'"{name}" was removed from your catalog.')
-        except ProtectedError:
-            messages.error(
-                request,
-                f'"{name}" can\'t be deleted because it already has orders attached to it. '
-                'Set its stock to 0 to hide it from customers instead.'
-            )
+        seller = _get_seller_profile(request.user)
+        product = get_object_or_404(Product, pk=pk, seller=seller)
+        product.delete()
+        messages.success(request, "Product deleted.")
     return redirect('seller_dashboard')
