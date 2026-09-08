@@ -14,11 +14,11 @@
       rel="stylesheet"
     />
 
-    <!-- Markdown rendering for AI widget replies (client-side, since messages arrive as JSON) -->
+    <!-- Markdown rendering for AI widget replies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
 
-    <!-- HTMX to eliminate full page reloads & navigation blinking -->
+    <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 
     <script>
@@ -68,7 +68,6 @@
         box-shadow: 0 0 0 4px rgba(18, 184, 166, 0.12);
       }
 
-      /* Glowing Heartbeat & Diaphragm Pulse */
       @keyframes ecgDash {
         0% {
           stroke-dasharray: 4 90;
@@ -106,10 +105,6 @@
         }
       }
 
-      /* ============================
-       AI Chat Widget
-       ============================ */
-
       #ai-widget-panel {
         position: fixed;
         bottom: 96px;
@@ -140,7 +135,6 @@
         display: flex;
       }
 
-      /* Maximized: pop to a big centered rectangle, like Gmail's expanded compose */
       #ai-widget-panel.maximized {
         top: 50%;
         left: 50%;
@@ -290,14 +284,12 @@
         }
       }
 
-      /* Floating bubble button — status colors applied via JS-toggled Tailwind-esque classes below */
       #ai-widget-label {
         transition:
           opacity 0.2s ease,
           transform 0.2s ease;
       }
 
-      /* Status colors are CSS-driven because these states are added by JavaScript. */
       #ai-widget-dot,
       #ai-widget-ping,
       #ai-widget-label-dot {
@@ -316,47 +308,17 @@
         background-color: #10b981;
       }
 
-      /* Attention-grabbing "reply's ready" bounce, played once when a new
-       message arrives while the widget is minimized. */
       @keyframes aiPopIn {
-        0% {
-          transform: scale(1);
-        }
-        30% {
-          transform: scale(1.22);
-        }
-        55% {
-          transform: scale(0.92);
-        }
-        75% {
-          transform: scale(1.08);
-        }
-        100% {
-          transform: scale(1);
-        }
+        0% { transform: scale(1); }
+        30% { transform: scale(1.22); }
+        55% { transform: scale(0.92); }
+        75% { transform: scale(1.08); }
+        100% { transform: scale(1); }
       }
       .ai-pop {
         animation: aiPopIn 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
 
-      /* Small wiggle on the label so it doesn't just sit there */
-      @keyframes aiLabelWiggle {
-        0%,
-        100% {
-          transform: rotate(0deg);
-        }
-        25% {
-          transform: rotate(-2deg);
-        }
-        75% {
-          transform: rotate(2deg);
-        }
-      }
-      .ai-label-wiggle {
-        animation: aiLabelWiggle 0.5s ease-in-out 2;
-      }
-
-      /* Unread count badge — bounces continuously until the widget is opened */
       #ai-widget-badge {
         position: absolute;
         top: -6px;
@@ -394,18 +356,17 @@
     </style>
   </head>
   <body class="min-h-screen bg-paper text-ink" hx-boost="true">
-    <!-- Sticky Backdrop Blur Header -->
+    <!-- Sticky Header -->
     <nav
       class="sticky top-0 z-50 border-b border-slate-800 bg-ink/95 px-5 py-3.5 backdrop-blur-md sm:px-8"
     >
       <div class="mx-auto flex max-w-7xl items-center gap-4">
-        <!-- Animated HealthFlow Branding -->
+        <!-- HealthFlow Branding -->
         <a
           href="{% url 'home' %}"
           class="group inline-flex shrink-0 items-center gap-3.5 focus:outline-none"
           aria-label="HealthFlow Home"
         >
-          <!-- Stethoscope Heart SVG Container -->
           <div
             class="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-lg shadow-black/20 transition-transform duration-300 group-hover:scale-105"
           >
@@ -416,39 +377,23 @@
               xmlns="http://www.w3.org/2000/svg"
               aria-hidden="true"
             >
-              <!-- Soft inner glow -->
               <circle cx="32" cy="32" r="24" fill="#12B8A6" opacity="0.05" />
-
-              <!-- Stethoscope ear tips -->
               <circle cx="20" cy="11" r="3.6" fill="#12B8A6" />
               <circle cx="44" cy="11" r="3.6" fill="#12B8A6" />
-
-              <!-- Stethoscope tubing forming a heart -->
               <path
-                d="M20 15
-                 C13 13, 9 19, 11 26
-                 C13 33, 22 39, 32 47
-                 C42 39, 51 33, 53 26
-                 C55 19, 51 13, 44 15"
+                d="M20 15 C13 13, 9 19, 11 26 C13 33, 22 39, 32 47 C42 39, 51 33, 53 26 C55 19, 51 13, 44 15"
                 stroke="#12B8A6"
                 stroke-width="3.3"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
-
-              <!-- Cable from heart point to chestpiece -->
               <path
-                d="M32 47
-                 V51
-                 C32 57, 23 58, 19 54
-                 C16 51, 16 47, 17 43"
+                d="M32 47 V51 C32 57, 23 58, 19 54 C16 51, 16 47, 17 43"
                 stroke="#12B8A6"
                 stroke-width="3"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               />
-
-              <!-- Chestpiece & Glowing Diaphragm Dot -->
               <circle
                 cx="17"
                 cy="39"
@@ -464,16 +409,8 @@
                 fill="#D9FF5D"
                 class="glow-diaphragm"
               />
-
-              <!-- Glowing Heartbeat Line -->
               <path
-                d="M16 29
-                 H23
-                 L26 24
-                 L29 34
-                 L33 21
-                 L36 30
-                 H46"
+                d="M16 29 H23 L26 24 L29 34 L33 21 L36 30 H46"
                 stroke="#D9FF5D"
                 stroke-width="2.3"
                 stroke-linecap="round"
@@ -483,7 +420,6 @@
             </svg>
           </div>
 
-          <!-- Typography -->
           <div class="hidden leading-none sm:block">
             <p
               class="font-mono text-[9px] uppercase tracking-[0.22em] text-lime"
@@ -496,7 +432,7 @@
           </div>
         </a>
 
-        <!-- Centered Search Bar (Daraz/Shein style) -->
+        <!-- Centered Search Bar -->
         {% if request.resolver_match.url_name != 'admin_dashboard' %}
         <form
           method="get"
@@ -557,7 +493,8 @@
             Help
           </a>
 
-          {% if user.is_authenticated %}
+          <!-- Cart button: only displayed if NOT a seller -->
+          {% if not user.seller_profile %}
           <a
             href="{% url 'cart_view' %}"
             class="relative rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-teal hover:text-white"
@@ -569,8 +506,10 @@
             >
             {% endif %}
           </a>
+          {% endif %}
 
           <!-- Avatar dropdown -->
+          {% if user.is_authenticated %}
           <div class="relative" id="user-menu-wrapper">
             <button
               id="user-menu-button"
@@ -626,6 +565,7 @@
                 </p>
               </div>
               <div class="p-1.5">
+                {% if user.customer_profile %}
                 <a
                   href="{% url 'customer_profile' %}"
                   class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
@@ -636,16 +576,29 @@
                   class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
                   ><span class="text-teal">⚙</span> Settings</a
                 >
+                {% endif %}
+
+                {% if user.seller_profile %}
+                <a
+                  href="{% url 'seller_dashboard' %}"
+                  class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
+                  ><span class="text-teal">▦</span> Seller Dashboard</a
+                >
+                {% else %}
                 <a
                   href="{% url 'dashboard' %}"
                   class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
                   ><span class="text-teal">▦</span> Dashboard</a
                 >
+                {% endif %}
+
+                {% if not user.seller_profile %}
                 <a
                   href="{% url 'cart_view' %}"
                   class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
                   ><span class="text-teal">□</span> Cart</a
                 >
+                {% endif %}
               </div>
               <a
                 href="{% url 'logout' %}"
@@ -655,7 +608,9 @@
               </a>
             </div>
           </div>
-          {% endif %} {% if not user.is_authenticated %}
+          {% endif %}
+
+          {% if not user.is_authenticated %}
           <a
             href="{% url 'login' %}"
             class="rounded-xl border border-slate-700 bg-slate-800/60 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-lime hover:text-lime"
@@ -676,10 +631,7 @@
     <!-- Page Content -->
     {% block content %}{% endblock %}
 
-    <!-- ============================
-       Global Floating AI Chat Widget
-       ============================ -->
-
+    <!-- Global Floating AI Chat Widget -->
     <div id="ai-widget-backdrop"></div>
 
     <button
@@ -688,7 +640,6 @@
       class="fixed bottom-6 right-6 z-[61] flex items-center gap-3 border-none bg-transparent p-0 cursor-pointer focus:outline-none"
       aria-label="Ask HealthFlow AI"
     >
-      <!-- Speech Bubble Label -->
       <div
         id="ai-widget-label"
         class="hidden sm:flex items-center gap-2 rounded-full border border-teal/30 bg-ink/90 backdrop-blur-md px-4 py-2 text-xs font-semibold text-white shadow-xl"
@@ -700,7 +651,6 @@
         <span id="ai-widget-label-text">Ask HealthFlow AI</span>
       </div>
 
-      <!-- Floating Trigger Button -->
       <span
         id="ai-widget-trigger"
         class="group relative flex h-14 w-14 items-center justify-center rounded-full bg-teal text-ink shadow-lg shadow-teal/30 transition-all duration-300 hover:scale-105 hover:bg-lime hover:shadow-lime/40"
@@ -734,7 +684,6 @@
     </button>
 
     <div id="ai-widget-panel">
-      <!-- Panel header -->
       <div
         class="flex items-center justify-between border-b border-slate-100 bg-ink px-4 py-3"
       >
@@ -827,7 +776,6 @@
         </div>
       </div>
 
-      <!-- Messages -->
       <div id="ai-widget-messages">
         <div class="ai-msg-row-bot">
           <div class="ai-avatar">
@@ -851,7 +799,6 @@
         </div>
       </div>
 
-      <!-- Composer -->
       <form
         id="ai-widget-form"
         class="flex items-center gap-2 border-t border-slate-100 p-3"
@@ -904,11 +851,8 @@
         const bubble = document.getElementById("ai-widget-bubble");
         const panel = document.getElementById("ai-widget-panel");
         const backdrop = document.getElementById("ai-widget-backdrop");
-        const ping = document.getElementById("ai-widget-ping");
-        const dot = document.getElementById("ai-widget-dot");
         const badge = document.getElementById("ai-widget-badge");
         const labelText = document.getElementById("ai-widget-label-text");
-        const labelDot = document.getElementById("ai-widget-label-dot");
         const messagesEl = document.getElementById("ai-widget-messages");
         const form = document.getElementById("ai-widget-form");
         const input = document.getElementById("ai-widget-input");
@@ -923,7 +867,6 @@
         let historyLoaded = false;
         let hasUnreadReply = false;
 
-        // ---- CSRF helper (Django's csrftoken cookie) ----
         function getCookie(name) {
           const value = `; ${document.cookie}`;
           const parts = value.split(`; ${name}=`);
@@ -932,7 +875,6 @@
         }
         const csrftoken = getCookie("csrftoken");
 
-        // ---- Status: color-codes the ring, dot, and label text ----
         const STATUS_COLORS = {
           idle: { text: "Ask HealthFlow AI" },
           thinking: { text: "HealthFlow AI is typing…" },
@@ -945,7 +887,6 @@
           badge.classList.toggle("show", state === "unread");
         }
 
-        // ---- Rendering ----
         function renderMarkdown(text) {
           if (window.marked && window.DOMPurify) {
             return DOMPurify.sanitize(marked.parse(text || ""));
@@ -985,12 +926,12 @@
           messagesEl.appendChild(row);
 
           if (fallback) {
-            const badge = document.createElement("span");
-            badge.className =
+            const badgeEl = document.createElement("span");
+            badgeEl.className =
               "ml-9 inline-block rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-700";
-            badge.textContent =
+            badgeEl.textContent =
               "Couldn't find a confident match — team notified";
-            messagesEl.appendChild(badge);
+            messagesEl.appendChild(badgeEl);
           }
           scrollToBottom();
         }
@@ -1015,7 +956,6 @@
           }
         }
 
-        // ---- History loading (once, lazily) ----
         function loadHistory() {
           if (historyLoaded) return;
           historyLoaded = true;
@@ -1025,7 +965,7 @@
             .then((r) => r.json())
             .then((data) => {
               const history = data.chat_history || [];
-              if (history.length === 0) return; // keep the default greeting
+              if (history.length === 0) return;
               messagesEl.innerHTML = "";
               history.forEach((turn) => {
                 if (turn.role === "user") appendUserMessage(turn.text);
@@ -1037,7 +977,6 @@
             });
         }
 
-        // ---- Panel open/close ----
         function openPanel() {
           isOpen = true;
           hasUnreadReply = false;
@@ -1057,11 +996,8 @@
         }
 
         bubble.addEventListener("click", function () {
-          if (isOpen) {
-            closePanel();
-          } else {
-            openPanel();
-          }
+          if (isOpen) closePanel();
+          else openPanel();
         });
         minimizeBtn.addEventListener("click", closePanel);
         closeBtn.addEventListener("click", closePanel);
@@ -1092,7 +1028,6 @@
           });
         });
 
-        // ---- Sending a message ----
         form.addEventListener("submit", function (e) {
           e.preventDefault();
           const text = input.value.trim();
@@ -1118,7 +1053,6 @@
               hideTyping();
               isThinking = false;
               appendBotMessage(data.answer, data.fallback_triggered);
-              // Keep a visible unread state until the user opens the panel.
               hasUnreadReply = !isOpen;
               setStatus(hasUnreadReply ? "unread" : "idle");
             })
@@ -1133,8 +1067,6 @@
               setStatus(hasUnreadReply ? "unread" : "idle");
             });
         });
-
-        // Reopening clears the unread indicator (handled in openPanel via setStatus).
       })();
     </script>
   </body>
