@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 
@@ -50,6 +51,9 @@ def add_to_cart(request, product_id):
         return redirect(f"{reverse('login')}?next={reverse('customer_dashboard')}")
 
     product = get_object_or_404(Product, id=product_id)
+    if product.approval_status != Product.APPROVAL_APPROVED:
+        messages.error(request, "This product is still awaiting admin approval and cannot be ordered yet.")
+        return _safe_redirect_back(request, reverse('customer_dashboard'))
 
     try:
         quantity = int(request.POST.get('quantity', 1))
@@ -107,6 +111,11 @@ def update_cart_item(request, product_id):
             quantity = 1
 
         product = get_object_or_404(Product, id=product_id)
+        if product.approval_status != Product.APPROVAL_APPROVED:
+            cart.remove(product_id)
+            messages.error(request, f'"{product.name}" is no longer available and was removed from your cart.')
+            return redirect('cart_view')
+
         if quantity > product.stock:
             quantity = product.stock
             messages.warning(request, f"Only {product.stock} unit(s) of \"{product.name}\" available.")
@@ -135,8 +144,14 @@ def checkout_view(request):
         messages.error(request, "Your cart is empty.")
         return redirect('cart_view')
 
-    # Re-validate stock at checkout time in case it changed since items were added.
+    # Give immediate feedback before validating the rest of the checkout form.
     for item in items:
+        if item['product'].approval_status != Product.APPROVAL_APPROVED:
+            messages.error(
+                request,
+                f'"{item["product"].name}" is no longer approved for sale. Please remove it from your cart.'
+            )
+            return redirect('cart_view')
         if item['quantity'] > item['product'].stock:
             messages.error(
                 request,
@@ -194,32 +209,54 @@ def checkout_view(request):
     subtotal = cart.get_total_price()
     tax, service_charge, total = _checkout_totals(subtotal, fulfillment_method)
 
-    order = Order.objects.create(
-        customer=customer_profile,
-        subtotal=subtotal,
-        tax_shipping=tax + service_charge,
-        total=total,
-        contact_email=contact_email,
-        contact_phone=contact_phone,
-        fulfillment_method=fulfillment_method,
-        delivery_address=delivery_address,
-        pickup_location=pickup_location_names.get(pickup_location, '') if fulfillment_method == 'pickup' else '',
-        payment_method=payment_method,
-        payment_phone=payment_phone,
-        delivery_note=delivery_note,
-        status='Pending',
-    )
+    with transaction.atomic():
+        product_ids = [item['product'].id for item in items]
+        locked_products = {
+            product.id: product
+            for product in Product.objects.select_for_update().filter(id__in=product_ids)
+        }
 
-    for item in items:
-        product = item['product']
-        OrderItem.objects.create(
-            order=order,
-            product=product,
-            quantity=item['quantity'],
-            unit_price=item['price'],
+        for item in items:
+            product = locked_products.get(item['product'].id)
+            if product is None or product.approval_status != Product.APPROVAL_APPROVED:
+                messages.error(
+                    request,
+                    f'"{item["product"].name}" is no longer approved for sale. Please remove it from your cart.'
+                )
+                return redirect('cart_view')
+            if item['quantity'] > product.stock:
+                messages.error(
+                    request,
+                    f'"{product.name}" only has {product.stock} unit(s) left. Please update your cart.'
+                )
+                return redirect('cart_view')
+
+        order = Order.objects.create(
+            customer=customer_profile,
+            subtotal=subtotal,
+            tax_shipping=tax + service_charge,
+            total=total,
+            contact_email=contact_email,
+            contact_phone=contact_phone,
+            fulfillment_method=fulfillment_method,
+            delivery_address=delivery_address,
+            pickup_location=pickup_location_names.get(pickup_location, '') if fulfillment_method == 'pickup' else '',
+            payment_method=payment_method,
+            payment_phone=payment_phone,
+            delivery_note=delivery_note,
+            status='Pending',
         )
-        product.stock = max(product.stock - item['quantity'], 0)
-        product.save(update_fields=['stock'])
+
+        for item in items:
+            product = locked_products[item['product'].id]
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=item['quantity'],
+                unit_price=item['price'],
+            )
+            product.stock -= item['quantity']
+            product.save(update_fields=['stock'])
 
     cart.clear()
     messages.success(request, f"Order #{order.id} placed successfully! We'll keep you posted on its status.")
