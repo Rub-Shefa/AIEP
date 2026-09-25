@@ -1,9 +1,9 @@
 {% extends "accounts/base.html" %}
 
-{% block title %}Provider Messages - HealthFlow{% endblock %}
+{% block title %}Messages - HealthFlow{% endblock %}
 
 {% block content %}
-<div class="mx-auto max-w-[1300px] px-5 py-8 sm:px-8">
+<div class="mx-auto max-w-[1400px] px-5 py-8 sm:px-8">
   <style>
     #ai-widget-label {
       display: none !important;
@@ -34,46 +34,54 @@
 
   <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div>
-      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Provider inbox</p>
-      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">Patient Messages</h1>
+      <p class="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-teal">Care messages</p>
+      <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-ink">Messages</h1>
     </div>
-    <a href="{% url 'provider_dashboard' %}" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-extrabold text-slate-700 hover:border-teal hover:text-teal">
-      Back to Provider Dashboard
+    <a href="{% url 'customer_dashboard' %}" class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-extrabold text-slate-700 hover:border-teal hover:text-teal">
+      Back to Dashboard
     </a>
   </div>
 
-  <div class="message-shell grid grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:grid-cols-[320px_1fr]">
+  <div class="message-shell grid grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:grid-cols-[340px_1fr]">
     <aside class="flex min-h-0 flex-col border-b border-slate-200 bg-slate-50 lg:border-b-0 lg:border-r">
       <div class="border-b border-slate-200 p-4">
-        <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Patients</p>
+        <p class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Open conversations</p>
       </div>
       <div class="min-h-0 overflow-y-auto p-3 lg:flex-1">
-        {% for patient in patients %}
-        <a href="?patient_id={{ patient.id }}" class="mb-2 block rounded-xl border p-3 transition {% if selected_patient.id == patient.id %}border-teal bg-teal/10{% else %}border-slate-200 bg-white hover:border-teal/40{% endif %}">
-          <p class="truncate text-sm font-extrabold text-slate-900">{{ patient.user.get_full_name|default:patient.user.username }}</p>
+        {% for conversation in conversations %}
+        <a href="{% url 'customer_messages' %}?conversation_id={{ conversation.id }}" class="mb-2 block rounded-xl border p-3 transition {% if selected_conversation.id == conversation.id %}border-teal bg-teal/10{% else %}border-slate-200 bg-white hover:border-teal/40{% endif %}">
+          <div class="flex items-center justify-between gap-2">
+            <p class="truncate text-sm font-extrabold text-slate-900">{{ conversation.other_user.get_full_name|default:conversation.other_user.username }}</p>
+            <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-bold text-slate-500">
+              {% if conversation.thread_type == 'Customer-Provider' %}Doctor{% else %}Seller{% endif %}
+            </span>
+          </div>
           <p class="mt-1 truncate text-xs text-slate-500">
-            {% if patient.last_message %}{{ patient.last_message.content|default:"Attachment" }}{% else %}New conversation{% endif %}
+            {% if conversation.last_message %}{{ conversation.last_message.content|default:"Attachment" }}{% else %}No messages yet{% endif %}
           </p>
           <p class="mt-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            {{ patient.message_count }} message{{ patient.message_count|pluralize }}
+            {{ conversation.message_count }} message{{ conversation.message_count|pluralize }}
           </p>
         </a>
         {% empty %}
-        <p class="p-3 text-xs text-slate-500">Patient messages will appear here after a patient starts a conversation.</p>
+        <p class="p-3 text-xs text-slate-500">Your conversations will appear here after you message a doctor or seller.</p>
         {% endfor %}
       </div>
     </aside>
 
     <main class="flex flex-col overflow-hidden" style="height: 100%; min-height: 0;">
-      {% if selected_patient %}
+      {% if selected_conversation %}
       <header class="flex items-center justify-between gap-3 border-b border-slate-800 bg-ink px-5 py-4">
         <div>
-          <p class="text-sm font-extrabold text-white">{{ selected_patient.user.get_full_name|default:selected_patient.user.username }}</p>
-          <p class="mt-0.5 text-xs text-slate-300">Patient care conversation</p>
+          <p class="text-sm font-extrabold text-white">{{ selected_partner.get_full_name|default:selected_partner.username }}</p>
+          <p class="mt-0.5 text-xs text-slate-300">
+            {% if selected_conversation.thread_type == 'Customer-Provider' %}Doctor conversation{% else %}Seller conversation{% endif %}
+          </p>
         </div>
         <form method="post">
           {% csrf_token %}
           <input type="hidden" name="action" value="delete_conversation">
+          <input type="hidden" name="conversation_id" value="{{ selected_conversation.id }}">
           <button type="submit" class="rounded-lg border border-rose-300/40 px-3 py-2 text-xs font-extrabold text-rose-100 hover:bg-rose-500/20">
             Delete conversation
           </button>
@@ -99,6 +107,7 @@
               <form method="post">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="delete_message">
+                <input type="hidden" name="conversation_id" value="{{ selected_conversation.id }}">
                 <input type="hidden" name="message_id" value="{{ msg.id }}">
                 <button type="submit" class="text-[10px] font-bold underline-offset-2 hover:underline" style="{% if msg.sender == request.user %}color:#fecdd3;{% else %}color:#be123c;{% endif %}">
                   Delete
@@ -109,24 +118,27 @@
         </div>
         {% empty %}
         <div class="flex h-full items-center justify-center text-center">
-          <p class="text-sm font-semibold text-slate-500">The patient has not sent a message yet.</p>
+          <p class="text-sm font-semibold text-slate-500">Send the first message to start this conversation.</p>
         </div>
         {% endfor %}
       </div>
 
       <form method="post" enctype="multipart/form-data" class="relative z-20 border-t border-slate-200 bg-white p-4 shadow-[0_-8px_20px_rgba(15,23,42,0.06)]" style="flex-shrink: 0;">
         {% csrf_token %}
+        <input type="hidden" name="conversation_id" value="{{ selected_conversation.id }}">
         <div class="flex flex-col gap-2 sm:flex-row">
-          <input type="text" name="message" placeholder="Type your reply..." class="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-teal focus:outline-none">
-          {% if attachment_allowed %}
+          <input type="text" name="message" placeholder="Type your message..." class="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-teal focus:outline-none">
+          {% if allow_attachments %}
           <input type="file" name="attachment" accept="image/*,video/*" class="rounded-xl border border-slate-300 px-3 py-2 text-xs text-slate-600">
           {% endif %}
-          <button type="submit" class="shrink-0 rounded-xl bg-ink px-6 py-3 text-sm font-extrabold text-white transition hover:bg-teal">Send</button>
+          <button type="submit" class="shrink-0 rounded-xl bg-ink px-6 py-3 text-sm font-extrabold text-white transition hover:bg-teal">
+            Send
+          </button>
         </div>
       </form>
       {% else %}
       <div class="flex flex-1 items-center justify-center p-8 text-center">
-        <p class="text-sm font-semibold text-slate-500">Select a patient conversation to reply.</p>
+        <p class="text-sm font-semibold text-slate-500">Choose a doctor or seller to start messaging.</p>
       </div>
       {% endif %}
     </main>

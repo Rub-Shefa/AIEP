@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
-      {% block title %}HealthFlow · Smart Health Commerce{% endblock %}
+      {% block title %}HealthFlow - Smart Health Commerce{% endblock %}
     </title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -41,6 +41,51 @@
     </script>
 
     <style>
+      .bg-ink,
+      .bg-ink\/95 {
+        background-color: #0b1620 !important;
+      }
+
+      .bg-ink\/90 {
+        background-color: rgba(11, 22, 32, 0.9) !important;
+      }
+
+      .bg-paper {
+        background-color: #f7f7f4 !important;
+      }
+
+      .bg-teal {
+        background-color: #12b8a6 !important;
+      }
+
+      .bg-lime {
+        background-color: #d9ff5d !important;
+      }
+
+      .text-ink {
+        color: #0b1620 !important;
+      }
+
+      .text-teal {
+        color: #12b8a6 !important;
+      }
+
+      .text-lime {
+        color: #d9ff5d !important;
+      }
+
+      .border-teal {
+        border-color: #12b8a6 !important;
+      }
+
+      .hover\:bg-teal:hover {
+        background-color: #12b8a6 !important;
+      }
+
+      .hover\:text-lime:hover {
+        color: #d9ff5d !important;
+      }
+
       body {
         font-family: "Manrope", sans-serif;
         background-color: #f7f7f4;
@@ -436,7 +481,7 @@
         {% if request.resolver_match.url_name != 'admin_dashboard' %}
         <form
           method="get"
-          action="{% url 'home' %}"
+          action="{% if user.is_authenticated and user.customer_profile %}{% url 'customer_dashboard' %}{% else %}{% url 'home' %}{% endif %}"
           hx-boost="false"
           class="mx-auto flex w-full max-w-xl items-center gap-2 rounded-xl bg-white px-3 py-2 shadow-inner"
         >
@@ -457,7 +502,7 @@
             type="text"
             name="q"
             value="{{ request.GET.q|default:'' }}"
-            placeholder="Search supplies — try a symptom like 'headache'…"
+            placeholder="Search supplies - try a symptom like 'headache'..."
             class="w-full border-none bg-transparent px-1 py-1 text-sm text-ink focus:outline-none focus:ring-0"
           />
           <button
@@ -568,35 +613,53 @@
                 {% if user.customer_profile %}
                 <a
                   href="{% url 'customer_profile' %}"
-                  class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
-                  ><span class="text-teal">◎</span> My profile</a
+                  class="block rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
+                  >My profile</a
                 >
                 <a
                   href="{% url 'customer_settings' %}"
-                  class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
-                  ><span class="text-teal">⚙</span> Settings</a
+                  class="block rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
+                  >Settings</a
+                >
+                <a
+                  href="{% url 'customer_messages' %}"
+                  class="block rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
+                  >Messages</a
                 >
                 {% endif %}
 
                 {% if user.seller_profile %}
                 <a
                   href="{% url 'seller_dashboard' %}"
-                  class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
-                  ><span class="text-teal">▦</span> Seller Dashboard</a
+                  class="block rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
+                  >Seller Dashboard</a
+                >
+                <a
+                  href="{% url 'seller_messages' %}"
+                  class="block rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
+                  >Seller Messages</a
                 >
                 {% else %}
                 <a
                   href="{% url 'dashboard' %}"
-                  class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
-                  ><span class="text-teal">▦</span> Dashboard</a
+                  class="block rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
+                  >Dashboard</a
+                >
+                {% endif %}
+
+                {% if user.provider_profile %}
+                <a
+                  href="{% url 'provider_messages' %}"
+                  class="block rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
+                  >Provider Messages</a
                 >
                 {% endif %}
 
                 {% if not user.seller_profile %}
                 <a
                   href="{% url 'cart_view' %}"
-                  class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
-                  ><span class="text-teal">□</span> Cart</a
+                  class="block rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-lime"
+                  >Cart</a
                 >
                 {% endif %}
               </div>
@@ -808,7 +871,7 @@
           id="ai-widget-input"
           required
           autocomplete="off"
-          placeholder="Type your question…"
+          placeholder="Type your question..."
           class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs focus:border-teal focus:outline-none"
         />
         <button
@@ -822,7 +885,7 @@
         <a
           href="{% url 'ai_assistant' %}"
           class="text-[11px] font-semibold text-slate-400 hover:text-teal"
-          >Open full Help Center →</a
+          >Open full Help Center -></a
         >
       </div>
     </div>
@@ -877,7 +940,7 @@
 
         const STATUS_COLORS = {
           idle: { text: "Ask HealthFlow AI" },
-          thinking: { text: "HealthFlow AI is typing…" },
+          thinking: { text: "HealthFlow AI is typing..." },
           unread: { text: "HealthFlow AI replied" },
         };
         function setStatus(state) {
@@ -930,7 +993,7 @@
             badgeEl.className =
               "ml-9 inline-block rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-700";
             badgeEl.textContent =
-              "Couldn't find a confident match — team notified";
+              "Couldn't find a confident match - team notified";
             messagesEl.appendChild(badgeEl);
           }
           scrollToBottom();
@@ -1071,3 +1134,4 @@
     </script>
   </body>
 </html>
+

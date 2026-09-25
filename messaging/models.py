@@ -19,6 +19,7 @@ class Conversation(models.Model):
     participant2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations_as_p2')
     thread_type = models.CharField(max_length=30, choices=THREAD_TYPES)
     created_at = models.DateTimeField(auto_now_add=True)
+    deleted_for_users = models.ManyToManyField(User, blank=True, related_name='hidden_conversations')
 
     class Meta:
         constraints = [
@@ -51,12 +52,23 @@ class ChatMessage(models.Model):
 
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_chat_messages')
-    content = models.TextField()
+    content = models.TextField(blank=True)
+    attachment = models.FileField(upload_to='chat_attachments/%Y/%m/', blank=True, null=True)
+    attachment_type = models.CharField(max_length=20, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+    deleted_for_users = models.ManyToManyField(User, blank=True, related_name='hidden_chat_messages')
 
     class Meta:
         ordering = ['timestamp']
 
     def __str__(self):
         return f"ChatMessage from {self.sender.username} in conversation #{self.conversation_id}"
+
+    @property
+    def is_image(self):
+        return self.attachment_type == 'image'
+
+    @property
+    def is_video(self):
+        return self.attachment_type == 'video'
