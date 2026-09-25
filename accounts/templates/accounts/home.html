@@ -124,7 +124,7 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h2 class="text-2xl font-extrabold text-slate-900">
-        {% if search_query %}Search Results for "{{ search_query }}"{% else %}Browse Supply Categories{% endif %}
+        Browse Healthcare Categories
       </h2>
       <p class="text-xs text-slate-500 mt-1">
         {% if ai_search_used %}
@@ -141,26 +141,6 @@
       </p>
     </div>
   </div>
-
-  {% if search_query and not products %}
-    <!-- High-Visibility Zero Results Card -->
-    <div class="mb-8 rounded-2xl border border-amber-200 bg-amber-50/80 p-6 text-slate-800 shadow-sm">
-      <div class="flex items-start gap-4">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-700">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-        </div>
-        <div>
-          <h3 class="text-base font-extrabold text-amber-900">No product matches for "{{ search_query }}"</h3>
-          <p class="mt-1 text-xs leading-relaxed text-amber-800">
-            Our AI searched the inventory for symptoms or terms related to <strong>"{{ search_query }}"</strong>, but no matching medications or supplies are currently stocked in the catalog.
-          </p>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <a href="{% url 'home' %}" class="rounded-lg bg-amber-900 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-slate-900">Clear Search Filter</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  {% endif %}
 
   <!-- Categories Grid -->
   <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4" id="category-grid">
@@ -290,8 +270,16 @@
 <section id="featured-products-section" class="max-w-7xl mx-auto px-6 py-8 sm:px-12 scroll-mt-24">
     <div class="flex items-center justify-between mb-6">
     <div>
-      <h2 class="text-2xl font-extrabold text-slate-900">Featured Operational Supplies</h2>
-      <p class="text-xs text-slate-500 mt-1">Real-time inventory levels from verified distributors</p>
+      <h2 class="text-2xl font-extrabold text-slate-900">Healthcare Products & Medical Supplies</h2>
+      <p class="text-xs text-slate-500 mt-1">
+        {% if ai_search_used %}
+          AI Semantic Search matched symptoms and intent
+        {% elif search_query %}
+          {{ products|length }} product{{ products|length|pluralize }} found for "{{ search_query }}"
+        {% else %}
+          Real-time inventory levels from verified distributors
+        {% endif %}
+      </p>
     </div>
   </div>
 
@@ -308,8 +296,11 @@
               <span class="absolute top-3 left-3 rounded-full bg-cyan-100 border border-cyan-200 px-3 py-1 font-mono text-[10px] font-extrabold text-cyan-800 z-10">Priority Express</span>
             {% endif %}
 
-            {% if product.image_url %}
-              <img src="{{ product.image_url }}" alt="{{ product.name }}" class="h-full w-full object-cover">
+            {% if product.display_image %}
+              <img src="{{ product.display_image }}" alt="{{ product.name }}" class="h-full w-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+              <svg class="hidden w-14 h-14 text-slate-300 stroke-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+              </svg>
             {% else %}
               <!-- Fallback Wireframe Box Icon -->
               <svg class="w-14 h-14 text-slate-300 stroke-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,6 +311,10 @@
 
           <span class="font-mono text-[10px] uppercase font-bold text-teal-600 tracking-wider">{{ product.category.name }}</span>
           <h3 class="text-sm font-extrabold text-slate-900 mt-1 leading-snug">{{ product.name }}</h3>
+          <p class="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600">
+            <span class="h-1.5 w-1.5 rounded-full bg-teal"></span>
+            <span class="truncate">Sold by {{ product.seller_display_name }}</span>
+          </p>
         </div>
 
         <div class="mt-6 pt-3 border-t border-slate-100 flex items-center justify-between">
@@ -340,7 +335,18 @@
         </div>
       </div>
     {% empty %}
-      <p class="text-xs text-slate-500 col-span-full">No products found in the catalog.</p>
+      <div class="col-span-full rounded-2xl border border-amber-200 bg-amber-50/80 p-6 text-slate-800 shadow-sm">
+        <h3 class="text-base font-extrabold text-amber-900">
+          {% if search_query %}No healthcare products match "{{ search_query }}"{% else %}No products found in the catalog.{% endif %}
+        </h3>
+        <p class="mt-1 text-xs leading-relaxed text-amber-800">
+          {% if providers %}
+            Matching healthcare providers are shown below.
+          {% else %}
+            Try searching by product name, symptom, category, seller, or doctor name.
+          {% endif %}
+        </p>
+      </div>
     {% endfor %}
   </div>
 
@@ -385,11 +391,17 @@
 </script>
 
   <!-- Verified Healthcare Providers & Consultations -->
-<section class="max-w-7xl mx-auto px-6 py-8 sm:px-12 border-t border-slate-200">
+<section id="providers-section" class="max-w-7xl mx-auto px-6 py-8 sm:px-12 border-t border-slate-200 scroll-mt-24">
   <div class="flex items-center justify-between mb-6">
     <div>
       <h2 class="text-2xl font-extrabold text-slate-900">Verified Healthcare Providers</h2>
-      <p class="text-xs text-slate-500 mt-1">Book direct consultations and expert medical support</p>
+      <p class="text-xs text-slate-500 mt-1">
+        {% if search_query %}
+          {{ providers|length }} provider{{ providers|length|pluralize }} found for "{{ search_query }}"
+        {% else %}
+          Book direct consultations and expert medical support
+        {% endif %}
+      </p>
     </div>
   </div>
 
@@ -399,8 +411,8 @@
         <div>
           <div class="flex items-center gap-3 mb-3">
             <!-- Dynamic Avatar Generator using real doctor name -->
-            <img src="https://ui-avatars.com/api/?name={{ provider.user.get_full_name|default:provider.user.username|urlencode }}&background=0D9488&color=fff&bold=true" 
-                 alt="Dr. {{ provider.user.get_full_name }}" 
+            <img src="https://ui-avatars.com/api/?name={{ provider.display_name|urlencode }}&background=0D9488&color=fff&bold=true" 
+                 alt="Dr. {{ provider.display_name }}" 
                  class="h-12 w-12 rounded-full object-cover border border-slate-200 shadow-sm shrink-0">
             
             <div>
@@ -408,7 +420,7 @@
                 {{ provider.credential_status|default:"Verified" }}
               </span>
               <h3 class="text-sm font-bold text-slate-900 mt-0.5">
-                Dr. {{ provider.user.get_full_name|default:provider.user.username }}
+                Dr. {{ provider.display_name }}
               </h3>
             </div>
           </div>
@@ -427,7 +439,9 @@
         </div>
       </div>
     {% empty %}
-      <p class="text-xs text-slate-500 col-span-full">No active providers registered yet.</p>
+      <p class="text-xs text-slate-500 col-span-full">
+        {% if search_query %}No providers match "{{ search_query }}".{% else %}No active providers registered yet.{% endif %}
+      </p>
     {% endfor %}
   </div>
 
@@ -679,7 +693,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     // Scroll directly to the Product Results grid when a query is submitted
     {% if search_query %}
-      const targetSection = document.getElementById("featured-products-section") || document.getElementById("search-results-section");
+      const targetSection = document.getElementById("{% if products %}featured-products-section{% elif providers %}providers-section{% else %}featured-products-section{% endif %}") || document.getElementById("featured-products-section");
       if (targetSection) {
         targetSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
