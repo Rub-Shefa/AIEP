@@ -1,4 +1,4 @@
-{% extends "accounts/base.html" %} {% block title %}Customer Portal ·
+{% extends "accounts/base.html" %} {% block title %}Customer Portal -
 HealthFlow{% endblock %} {% block content %}
 <div class="mx-auto max-w-[1500px] px-5 py-10 sm:px-8">
   {% if messages %}
@@ -26,6 +26,16 @@ HealthFlow{% endblock %} {% block content %}
       >Doctors</a
     >
     <a
+      href="#appointments"
+      class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600"
+      >Appointments</a
+    >
+    <a
+      href="{% url 'customer_messages' %}"
+      class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600"
+      >Messages</a
+    >
+    <a
       href="#orders"
       class="shrink-0 rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs font-bold text-slate-600"
       >Orders</a
@@ -41,26 +51,29 @@ HealthFlow{% endblock %} {% block content %}
         <!-- Profile block -->
         <div class="border-b border-slate-800 p-6">
           <div class="flex items-center gap-3">
-            <a href="{% url 'customer_profile' %}" class="shrink-0 rounded-full focus:outline-none focus:ring-4 focus:ring-lime/30">
-            {% if customer_profile.avatar_image %}
-            <img
-              src="{{ customer_profile.avatar_image.url }}"
-              alt="{{ user.get_full_name|default:user.username }}"
-              class="h-12 w-12 rounded-full border border-slate-700 object-cover"
-            />
-            {% elif customer_profile.avatar_url %}
-            <img
-              src="{{ customer_profile.avatar_url }}"
-              alt="{{ user.get_full_name|default:user.username }}"
-              class="h-12 w-12 rounded-full border border-slate-700 object-cover"
-            />
-            {% else %}
-            <img
-              src="https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username|urlencode }}&background=D9FF5D&color=0B1620&bold=true"
-              alt="{{ user.get_full_name|default:user.username }}"
-              class="h-12 w-12 rounded-full border border-slate-700 object-cover"
-            />
-            {% endif %}
+            <a
+              href="{% url 'customer_profile' %}"
+              class="shrink-0 rounded-full focus:outline-none focus:ring-4 focus:ring-lime/30"
+            >
+              {% if customer_profile.avatar_image %}
+              <img
+                src="{{ customer_profile.avatar_image.url }}"
+                alt="{{ user.get_full_name|default:user.username }}"
+                class="h-12 w-12 rounded-full border border-slate-700 object-cover"
+              />
+              {% elif customer_profile.avatar_url %}
+              <img
+                src="{{ customer_profile.avatar_url }}"
+                alt="{{ user.get_full_name|default:user.username }}"
+                class="h-12 w-12 rounded-full border border-slate-700 object-cover"
+              />
+              {% else %}
+              <img
+                src="https://ui-avatars.com/api/?name={{ user.get_full_name|default:user.username|urlencode }}&background=D9FF5D&color=0B1620&bold=true"
+                alt="{{ user.get_full_name|default:user.username }}"
+                class="h-12 w-12 rounded-full border border-slate-700 object-cover"
+              />
+              {% endif %}
             </a>
             <div class="min-w-0">
               <p class="truncate text-sm font-extrabold text-white">
@@ -148,6 +161,28 @@ HealthFlow{% endblock %} {% block content %}
             Browse Doctors
           </a>
           <a
+            href="#appointments"
+            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            Appointments
+            {% if upcoming_appointments_count %}
+            <span class="ml-auto rounded-full bg-lime px-2 py-0.5 text-[10px] font-extrabold text-ink">{{ upcoming_appointments_count }}</span>
+            {% endif %}
+          </a>
+          <a
             href="#orders"
             class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-slate-800/70 hover:text-lime"
           >
@@ -192,12 +227,18 @@ HealthFlow{% endblock %} {% block content %}
           >
             AI Health Assistant
           </a>
+          <a
+            href="{% url 'customer_messages' %}"
+            class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-cyan-400 hover:text-cyan-200"
+          >
+            Messages
+          </a>
           {% if user.is_staff or user.is_superuser %}
           <a
             href="{% url 'admin_dashboard' %}"
             class="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-teal hover:text-white"
           >
-            ← Admin Hub
+            Back to Admin Hub
           </a>
           {% endif %}
           <a
@@ -230,7 +271,7 @@ HealthFlow{% endblock %} {% block content %}
         </h1>
         <p class="mt-1 text-sm text-slate-500">
           Browse verified supplies, connect with healthcare providers, and track
-          your orders — all in one place.
+          your orders - all in one place.
         </p>
       </div>
 
@@ -275,17 +316,20 @@ HealthFlow{% endblock %} {% block content %}
         <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 class="text-xl font-extrabold text-slate-900">
-              Browse Supplies
+              Healthcare Products & Medical Supplies
             </h2>
             <p class="mt-1 text-xs text-slate-500">
-              Use the smart search above for products, symptoms, and intent.
+              Use the smart search above for products, symptoms, seller names,
+              and doctors.
             </p>
           </div>
+          {% if not query %}
           <a
-            href="{% url 'home' %}#search-results-section"
+            href="#catalog"
             class="rounded-xl bg-ink px-4 py-2.5 text-xs font-extrabold text-white hover:bg-teal"
-            >Search the catalog</a
+            >Browse products</a
           >
+          {% endif %}
         </div>
 
         <!-- Category chips -->
@@ -322,14 +366,35 @@ HealthFlow{% endblock %} {% block content %}
                 {% if product.is_regulated %}
                 <span
                   class="absolute left-3 top-3 z-10 rounded-full bg-lime-400 px-2.5 py-1 font-mono text-[9px] font-extrabold text-slate-900"
-                  >2-8°C Lock</span
+                  >2-8 C Lock</span
                 >
-                {% endif %} {% if product.image_url %}
+                {% endif %} {% if product.display_image %}
                 <img
-                  src="{{ product.image_url }}"
+                  src="{{ product.display_image }}"
                   alt="{{ product.name }}"
                   class="h-full w-full object-cover"
+                  onerror="
+                    this.style.display = 'none';
+                    this.nextElementSibling.classList.remove('hidden');
+                  "
                 />
+                <div
+                  class="hidden flex h-full w-full items-center justify-center"
+                >
+                  <svg
+                    class="h-12 w-12 text-slate-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                    ></path>
+                  </svg>
+                </div>
                 {% endif %}
               </div>
               <p
@@ -342,8 +407,16 @@ HealthFlow{% endblock %} {% block content %}
               >
                 {{ product.name }}
               </h3>
-              {% if product.dosage %}
-              <p class="mt-1 text-xs text-slate-500">{{ product.dosage }}</p>
+              <p
+                class="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600"
+              >
+                <span class="h-1.5 w-1.5 rounded-full bg-teal"></span>
+                <span class="truncate">Sold by {{ product.seller_display_name }}</span>
+              </p>
+              {% if product.description %}
+              <p class="mt-1 line-clamp-2 text-xs text-slate-500">
+                {{ product.description }}
+              </p>
               {% endif %}
             </div>
 
@@ -366,27 +439,35 @@ HealthFlow{% endblock %} {% block content %}
               </div>
 
               {% if product.stock > 0 %}
-              <form
-                method="post"
-                action="{% url 'add_to_cart' product.id %}"
-                class="flex items-center gap-2"
-              >
-                {% csrf_token %}
-                <input
-                  type="number"
-                  name="quantity"
-                  value="1"
-                  min="1"
-                  max="{{ product.stock }}"
-                  class="w-14 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-xs focus:border-teal focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-teal-600"
+              <div class="flex gap-2">
+                <form
+                  method="post"
+                  action="{% url 'add_to_cart' product.id %}"
+                  class="flex flex-1 items-center gap-2"
                 >
-                  Add to Cart
-                </button>
-              </form>
+                  {% csrf_token %}
+                  <input
+                    type="number"
+                    name="quantity"
+                    value="1"
+                    min="1"
+                    max="{{ product.stock }}"
+                    class="w-14 rounded-lg border border-slate-300 px-2 py-1.5 text-center text-xs focus:border-teal focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-extrabold text-white transition hover:bg-teal-600"
+                  >
+                    Add
+                  </button>
+                </form>
+                <a
+                  href="{% url 'customer_messages' %}?seller_id={{ product.seller.id }}"
+                  class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-extrabold text-slate-700 transition hover:border-teal hover:text-teal"
+                >
+                  Message
+                </a>
+              </div>
               {% else %}
               <button
                 disabled
@@ -398,9 +479,27 @@ HealthFlow{% endblock %} {% block content %}
             </div>
           </div>
           {% empty %}
-          <p class="col-span-full py-12 text-center text-sm text-slate-500">
-            No products match your search.
-          </p>
+          <div
+            class="col-span-full rounded-2xl border border-amber-200 bg-amber-50/80 p-6 text-slate-800 shadow-sm"
+          >
+            <h3 class="text-base font-extrabold text-amber-900">
+              {% if query %}No healthcare products match "{{ query }}"{% else
+              %}No healthcare products are available right now.{% endif %}
+            </h3>
+            <p class="mt-1 text-xs leading-relaxed text-amber-800">
+              {% if doctors %} Matching doctors are shown below so you can book
+              a consultation instead. {% else %} Try searching by product,
+              symptom, category, seller, or doctor name. {% endif %}
+            </p>
+            {% if query %}
+            <a
+              href="{% url 'customer_dashboard' %}#catalog"
+              class="mt-4 inline-flex rounded-lg bg-amber-900 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-slate-900"
+            >
+              Clear search
+            </a>
+            {% endif %}
+          </div>
           {% endfor %}
         </div>
 
@@ -420,114 +519,151 @@ HealthFlow{% endblock %} {% block content %}
       <!-- ============= BROWSE DOCTORS ============= -->
       <section
         id="doctors"
-        class="mt-16 scroll-mt-28 border-t border-slate-200 pt-10"
+        class="{% if query or doctor_query %}mt-8 pt-6{% else %}mt-16 pt-10{% endif %} scroll-mt-28 border-t border-slate-200"
       >
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 class="text-xl font-extrabold text-slate-900">
-              Browse Doctors
-            </h2>
+            <h2 class="text-xl font-extrabold text-slate-900">Browse Doctors</h2>
             <p class="mt-1 text-xs text-slate-500">
-              Verified healthcare providers available for consultation
+              Search by doctor name, specialty, hospital, clinic, or online availability. Booking opens a confirmation receipt first.
             </p>
           </div>
-          <a
-            href="#doctors"
-            class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-extrabold text-slate-700 hover:border-teal hover:text-teal"
-            >View all specialists</a
-          >
         </div>
 
         <div
           id="doctor-grid"
-          class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+          class="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3"
         >
           {% for provider in doctors %}
           <div
-            class="doctor-card flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md {% if forloop.counter > 6 %}hidden{% endif %}"
+            class="doctor-card flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md {% if forloop.counter > 6 %}hidden{% endif %}"
           >
-            <div>
-              <div class="mb-3 flex items-center gap-3">
+            <div class="flex items-start gap-3">
+              <a href="{% url 'doctor_detail' provider.id %}" class="shrink-0">
                 <img
-                  src="https://ui-avatars.com/api/?name={{ provider.user.get_full_name|default:provider.user.username|urlencode }}&background=0D9488&color=fff&bold=true"
-                  alt="Dr. {{ provider.user.get_full_name|default:provider.user.username }}"
-                  class="h-12 w-12 shrink-0 rounded-full border border-slate-200 object-cover shadow-sm"
+                  src="https://ui-avatars.com/api/?name={{ provider.display_name|urlencode }}&background=0D9488&color=fff&bold=true"
+                  alt="Dr. {{ provider.display_name }}"
+                  class="h-12 w-12 rounded-full border border-slate-200 object-cover shadow-sm"
                 />
-                <div class="min-w-0">
-                  <span
-                    class="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-800"
-                  >
-                    {{ provider.credential_status|default:"Verified" }}
-                  </span>
-                  <h3 class="mt-0.5 truncate text-sm font-bold text-slate-900">
-                    Dr. {{
-                    provider.user.get_full_name|default:provider.user.username
-                    }}
-                  </h3>
-                </div>
+              </a>
+              <div class="min-w-0 flex-1">
+                <span class="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-800">
+                  {{ provider.credential_status|default:"Verified" }}
+                </span>
+                <h3 class="mt-1 truncate text-sm font-bold text-slate-900">
+                  <a href="{% url 'doctor_detail' provider.id %}" class="hover:text-teal-700">Dr. {{ provider.display_name }}</a>
+                </h3>
+                <p class="mt-0.5 truncate text-xs font-semibold text-teal-700">{{ provider.specialty }}</p>
               </div>
+            </div>
 
-              <p class="text-xs font-semibold text-teal-600">
-                {{ provider.specialty }}
+            <div class="mt-3 space-y-2">
+              <p class="text-[11px] text-slate-500">
+                {{ provider.degrees|default:"Qualifications not listed" }} | {{ provider.experience_years }} yrs experience
               </p>
-              <p class="mt-1 text-[11px] text-slate-500">
-                {{ provider.degrees }} • {{ provider.experience_years }} yrs
-                experience
-              </p>
-
-              <div class="mt-2 flex flex-wrap gap-1.5">
+              <div class="flex flex-wrap gap-1.5">
                 {% if provider.consultation_type %}
-                <span
-                  class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600"
-                  >{{ provider.consultation_type }}</span
-                >
-                {% endif %} {% if provider.budget_tier %}
-                <span
-                  class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600"
-                  >{{ provider.budget_tier }}</span
-                >
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">{{ provider.consultation_type }}</span>
+                {% endif %}
+                {% if provider.budget_tier %}
+                <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">{{ provider.budget_tier }}</span>
                 {% endif %}
               </div>
-
               {% if provider.bio %}
-              <p
-                class="mt-3 line-clamp-3 text-xs leading-relaxed text-slate-600"
-              >
-                {{ provider.bio }}
-              </p>
+              <p class="line-clamp-2 text-xs leading-relaxed text-slate-600">{{ provider.bio }}</p>
               {% endif %}
             </div>
 
-            <div
-              class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3"
-            >
-              <div>
-                <span class="font-mono text-xs font-bold text-slate-900"
-                  >${{ provider.consultation_fee }}</span
-                >
-                <span class="text-[10px] text-slate-400"> / session</span>
+            {% if provider.practice_locations.all %}
+            <div class="mt-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+              <p class="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-400">Available at</p>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                {% for location in provider.practice_locations.all %}
+                  {% if location.is_active %}
+                  <span class="rounded-full bg-white px-2 py-1 text-[10px] font-semibold text-slate-600 ring-1 ring-slate-200">
+                    {{ location.name }}{% if location.location_type == 'online' %} · Online{% endif %}
+                  </span>
+                  {% endif %}
+                {% endfor %}
               </div>
-              {% if provider.user.email %}
-              <a
-                href="mailto:{{ provider.user.email }}?subject=Consultation%20Request"
-                class="rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-900"
-              >
-                Book Visit
-              </a>
+            </div>
+            {% endif %}
+
+            <div class="mt-auto border-t border-slate-100 pt-4">
+              <div class="mb-3 flex items-center justify-between">
+                <span class="font-mono text-xs font-bold text-slate-900">${{ provider.consultation_fee }}</span>
+                <span class="text-[10px] text-slate-400">/ session</span>
+              </div>
+
+              {% if provider.booking_slots %}
+              <form method="post" action="{% url 'book_appointment' provider.id %}" class="space-y-2">
+                {% csrf_token %}
+                <select
+                  name="slot_id"
+                  required
+                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-700 focus:border-teal focus:outline-none"
+                >
+                  <option value="">Choose place and time</option>
+                  {% for slot in provider.booking_slots %}
+                  <option value="{{ slot.id }}" data-weekday="{{ slot.weekday }}" data-day-name="{{ slot.get_weekday_display }}">
+                    {{ slot.get_weekday_display }} {{ slot.start_time|time:"g:i A" }} - {{ slot.end_time|time:"g:i A" }} | {{ slot.location.name }}{% if slot.location.location_type == 'online' %} (Online){% else %} (In-person){% endif %}
+                  </option>
+                  {% endfor %}
+                </select>
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-[130px_1fr]">
+                  <input
+                    type="date"
+                    name="appointment_date"
+                    min="{{ today_str }}"
+                    required
+                    class="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 focus:border-teal focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    name="reason_for_visit"
+                    placeholder="Reason for visit"
+                    class="rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-700 focus:border-teal focus:outline-none"
+                  />
+                </div>
+                <p class="appointment-date-hint hidden text-xs font-semibold text-teal-700"></p>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    type="submit"
+                    class="rounded-lg bg-ink px-3 py-2 text-xs font-extrabold text-white transition hover:bg-teal"
+                  >
+                    Continue to Confirmation
+                  </button>
+                  <a
+                    href="{% url 'customer_messages' %}?provider_id={{ provider.id }}"
+                    class="rounded-lg border border-slate-300 px-3 py-2 text-center text-xs font-extrabold text-slate-700 transition hover:border-teal hover:text-teal"
+                  >
+                    Message
+                  </a>
+                </div>
+                <p class="appointment-date-error hidden rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800"></p>
+              </form>
               {% else %}
-              <button
-                disabled
-                class="cursor-not-allowed rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-bold text-slate-400"
-              >
-                Book Visit
-              </button>
+              <div class="grid grid-cols-2 gap-2">
+                <button disabled class="cursor-not-allowed rounded-lg bg-slate-200 px-3 py-2 text-xs font-bold text-slate-400">No Slots</button>
+                <a href="{% url 'customer_messages' %}?provider_id={{ provider.id }}" class="rounded-lg border border-slate-300 px-3 py-2 text-center text-xs font-extrabold text-slate-700 transition hover:border-teal hover:text-teal">Message</a>
+              </div>
               {% endif %}
             </div>
           </div>
           {% empty %}
-          <p class="col-span-full py-12 text-center text-sm text-slate-500">
-            No doctors match your search right now.
-          </p>
+          <div class="col-span-full rounded-2xl border border-cyan-200 bg-cyan-50/80 p-6 text-slate-800 shadow-sm">
+            <h3 class="text-base font-extrabold text-cyan-900">
+              {% if query or doctor_query %}No doctors match "{{ doctor_query|default:query }}"{% else %}No doctors are available right now.{% endif %}
+            </h3>
+            <p class="mt-1 text-xs leading-relaxed text-cyan-800">
+              {% if products %}Matching healthcare products are shown above.{% else %}Try another doctor name, specialty, hospital, clinic, or healthcare keyword.{% endif %}
+            </p>
+            {% if query or doctor_query %}
+            <a href="{% url 'customer_dashboard' %}#doctors" class="mt-4 inline-flex rounded-lg bg-cyan-700 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-slate-900">
+              Clear search
+            </a>
+            {% endif %}
+          </div>
           {% endfor %}
         </div>
 
@@ -543,6 +679,111 @@ HealthFlow{% endblock %} {% block content %}
         </div>
         {% endif %}
       </section>
+      <!-- ============= APPOINTMENTS ============= -->
+      <section
+        id="appointments"
+        class="mt-12 scroll-mt-28 border-t border-slate-200 pt-8"
+      >
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-extrabold text-slate-900">My Appointments</h2>
+            <p class="mt-1 text-xs text-slate-500">
+              Confirmed doctor visits with serial numbers, place, and visit mode.
+            </p>
+          </div>
+        </div>
+
+        {% if upcoming_appointments %}
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {% for appointment in upcoming_appointments %}
+          <div class="rounded-2xl border border-teal-100 bg-white p-5 shadow-sm">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p class="font-mono text-[10px] font-bold uppercase tracking-wider text-teal-600">
+                  Serial #{{ appointment.serial_number|default:"Pending" }}
+                </p>
+                <h3 class="mt-1 text-sm font-extrabold text-slate-900">
+                  Dr. {{ appointment.provider.user.get_full_name|default:appointment.provider.user.username }}
+                </h3>
+                <p class="mt-1 text-xs text-slate-500">
+                  {{ appointment.provider.specialty }} | {{ appointment.scheduled_time|date:"M d, Y" }} at {{ appointment.scheduled_time|time:"g:i A" }}
+                </p>
+              </div>
+              <span class="rounded-full px-2.5 py-1 text-[10px] font-extrabold {% if appointment.appointment_mode == 'online' %}bg-cyan-100 text-cyan-700{% else %}bg-emerald-100 text-emerald-700{% endif %}">
+                {{ appointment.get_appointment_mode_display }}
+              </span>
+            </div>
+            <div class="mt-4 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+              <p class="font-bold text-slate-800">{{ appointment.appointment_place_name|default:"Place to be confirmed" }}</p>
+              {% if appointment.appointment_place_address %}
+              <p class="mt-1">{{ appointment.appointment_place_address }}</p>
+              {% endif %}
+              {% if appointment.notes %}
+              <p class="mt-2 text-slate-500">Reason: {{ appointment.notes }}</p>
+              {% endif %}
+              <div class="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
+                <p>
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Contact</span>
+                  {{ appointment.contact_phone|default:"Phone not saved" }}
+                </p>
+                <p>
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Payment</span>
+                  {{ appointment.get_payment_method_display }} · ${{ appointment.total_due }}
+                </p>
+              </div>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-2">
+              <a
+                href="{% url 'customer_messages' %}?provider_id={{ appointment.provider.id }}"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-center text-xs font-extrabold text-slate-700 transition hover:border-teal hover:text-teal"
+              >
+                Message Doctor
+              </a>
+              <form method="post" action="{% url 'cancel_appointment' appointment.id %}">
+                {% csrf_token %}
+                <button
+                  type="submit"
+                  class="w-full rounded-lg border border-rose-200 px-3 py-2 text-xs font-extrabold text-rose-600 transition hover:bg-rose-50"
+                >
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-white py-12 text-center">
+          <p class="text-sm font-semibold text-slate-600">No upcoming appointments yet.</p>
+          <p class="mt-1 text-xs text-slate-500">Choose a doctor above and book an available slot.</p>
+        </div>
+        {% endif %}
+
+        {% if past_appointments %}
+        <div class="mt-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+              <tr>
+                <th class="px-5 py-3 font-bold">Doctor</th>
+                <th class="px-5 py-3 font-bold">Date</th>
+                <th class="px-5 py-3 font-bold">Place</th>
+                <th class="px-5 py-3 font-bold">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for appointment in past_appointments %}
+              <tr>
+                <td class="px-5 py-3 font-semibold text-slate-800">Dr. {{ appointment.provider.user.get_full_name|default:appointment.provider.user.username }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ appointment.scheduled_time|date:"M d, Y" }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ appointment.appointment_place_name|default:"-" }}</td>
+                <td class="px-5 py-3 text-slate-600">{{ appointment.status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </section>
 
       <!-- ============= ORDER HISTORY ============= -->
       <section
@@ -552,7 +793,7 @@ HealthFlow{% endblock %} {% block content %}
         <h2 class="mb-5 text-xl font-extrabold text-slate-900">
           Order History
         </h2>
-        {% if orders %}
+        {% if orders|length %}
         <div
           class="overflow-x-auto rounded-2xl border border-slate-200 bg-white"
         >
@@ -580,9 +821,8 @@ HealthFlow{% endblock %} {% block content %}
                   {{ order.created_at|date:"M d, Y" }}
                 </td>
                 <td class="px-5 py-3 text-slate-600">
-                  {% for item in order.items.all %}
-                    {{ item.quantity }}x {{ item.product.name }}{% if not forloop.last %}, {% endif %}
-                  {% endfor %}
+                  {{ order.items.all|length }} item{{
+                  order.items.all|length|pluralize }}
                 </td>
                 <td class="px-5 py-3 font-bold text-slate-900">
                   ${{ order.total }}
@@ -628,5 +868,91 @@ HealthFlow{% endblock %} {% block content %}
   }
   wireShowMore("show-more-products-btn", "#product-grid .product-card");
   wireShowMore("show-more-doctors-btn", "#doctor-grid .doctor-card");
+
+  function selectedDateWeekday(dateValue) {
+    if (!dateValue) return null;
+    const [year, month, day] = dateValue.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    return (date.getDay() + 6) % 7;
+  }
+
+  function nextDateForWeekday(weekday) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayWeekday = (today.getDay() + 6) % 7;
+    let daysUntil = (Number(weekday) - todayWeekday + 7) % 7;
+    if (daysUntil === 0) daysUntil = 7;
+    const nextDate = new Date(today);
+    nextDate.setDate(today.getDate() + daysUntil);
+    return nextDate;
+  }
+
+  function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  document.querySelectorAll("form[action*='/appointments/book/']").forEach((form) => {
+    const slotSelect = form.querySelector("select[name='slot_id']");
+    const dateInput = form.querySelector("input[name='appointment_date']");
+    const errorBox = form.querySelector(".appointment-date-error");
+    const hintBox = form.querySelector(".appointment-date-hint");
+    if (!slotSelect || !dateInput || !errorBox) return;
+
+    function setNextAvailableDate() {
+      const selectedOption = slotSelect.options[slotSelect.selectedIndex];
+      const allowedWeekday = selectedOption && selectedOption.dataset.weekday;
+      if (allowedWeekday === undefined || allowedWeekday === "") return;
+      const nextDate = nextDateForWeekday(allowedWeekday);
+      dateInput.value = formatDateForInput(nextDate);
+      if (hintBox) {
+        hintBox.textContent = `Next available date: ${nextDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", year: "numeric" })}`;
+        hintBox.classList.remove("hidden");
+      }
+      validateAppointmentDate();
+    }
+
+    function validateAppointmentDate() {
+      const selectedOption = slotSelect.options[slotSelect.selectedIndex];
+      const allowedWeekday = selectedOption && selectedOption.dataset.weekday;
+      const allowedDayName = selectedOption && selectedOption.dataset.dayName;
+      const chosenWeekday = selectedDateWeekday(dateInput.value);
+      const isInvalid = allowedWeekday !== undefined && allowedWeekday !== "" && chosenWeekday !== null && Number(allowedWeekday) !== chosenWeekday;
+      const message = `This schedule is only available on ${allowedDayName}. Please choose a ${allowedDayName} date.`;
+
+      errorBox.classList.toggle("hidden", !isInvalid);
+      if (isInvalid) {
+        errorBox.textContent = message;
+        dateInput.setCustomValidity(message);
+      } else {
+        errorBox.textContent = "";
+        dateInput.setCustomValidity("");
+      }
+      return !isInvalid;
+    }
+
+    slotSelect.addEventListener("change", setNextAvailableDate);
+    dateInput.addEventListener("change", validateAppointmentDate);
+    form.addEventListener("submit", (event) => {
+      if (!validateAppointmentDate()) {
+        event.preventDefault();
+        event.stopPropagation();
+        dateInput.focus();
+        return false;
+      }
+    });
+  });
+
+  {% if query or doctor_query %}
+    const searchTarget = document.getElementById("catalog");
+    if (searchTarget) {
+      searchTarget.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  {% endif %}
 </script>
 {% endblock %}
+
+
+

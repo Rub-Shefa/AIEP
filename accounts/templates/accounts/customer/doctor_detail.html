@@ -1,0 +1,213 @@
+﻿{% extends "accounts/base.html" %}
+
+{% block title %}Doctor details - HealthFlow{% endblock %}
+
+{% block content %}
+<main class="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+  <a
+    href="{% url 'customer_dashboard' %}#doctors"
+    class="text-xs font-bold text-teal-700 hover:text-slate-900"
+  >Back to doctors</a>
+
+  <section class="mt-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <div class="flex flex-col gap-6 md:flex-row md:items-start">
+      <img
+        src="https://ui-avatars.com/api/?name={{ provider.display_name|urlencode }}&background=0D9488&color=fff&bold=true"
+        alt="Dr. {{ provider.display_name }}"
+        class="h-24 w-24 rounded-2xl object-cover"
+      />
+      <div class="min-w-0 flex-1">
+        <p class="font-mono text-xs font-bold uppercase tracking-[0.18em] text-teal">
+          {{ provider.credential_status|default:"Verified" }} provider
+        </p>
+        <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
+          Dr. {{ provider.display_name }}
+        </h1>
+        <p class="mt-2 text-sm font-bold text-teal-700">
+          {{ provider.specialty|default:"Healthcare provider" }}
+        </p>
+        <p class="mt-2 text-sm text-slate-600">
+          {{ provider.degrees|default:"Qualifications not listed" }} | {{ provider.experience_years }} years experience
+        </p>
+        {% if provider.bio %}
+        <p class="mt-4 max-w-3xl text-sm leading-relaxed text-slate-600">
+          {{ provider.bio }}
+        </p>
+        {% endif %}
+        <div class="mt-5 flex flex-wrap gap-3">
+          <span class="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
+            ${{ provider.consultation_fee }} / session
+          </span>
+          <a
+            href="{% url 'customer_messages' %}?provider_id={{ provider.id }}"
+            class="rounded-xl bg-ink px-4 py-2 text-xs font-extrabold text-white hover:bg-teal"
+          >Message doctor</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <section id="book-appointment" class="scroll-mt-28 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-extrabold text-slate-900">Practice locations</h2>
+      <div class="mt-4 space-y-3">
+        {% for location in provider.practice_locations.all %}
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p class="text-sm font-bold text-slate-800">{{ location.name }}</p>
+          <p class="mt-1 text-xs text-slate-500">
+            {{ location.get_location_type_display }}{% if location.address %} | {{ location.address }}{% endif %}
+          </p>
+        </div>
+        {% empty %}
+        <p class="text-sm text-slate-500">No practice locations have been published.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-extrabold text-slate-900">Book an appointment</h2>
+      <p class="mt-1 text-xs text-slate-500">
+        Choose a published schedule and date first. The next page will show phone, email, payment, and receipt confirmation before booking.
+      </p>
+      <div class="mt-4">
+        {% if provider.booking_slots %}
+        <form method="post" action="{% url 'book_appointment' provider.id %}" class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          {% csrf_token %}
+          <div class="grid gap-4">
+            <label class="block text-sm font-bold text-slate-700">
+              Appointment place and time
+              <select
+                name="slot_id"
+                required
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-teal focus:ring-2 focus:ring-teal/30"
+              >
+                <option value="">Choose a schedule</option>
+                {% for slot in provider.booking_slots %}
+                <option value="{{ slot.id }}" data-weekday="{{ slot.weekday }}" data-day-name="{{ slot.get_weekday_display }}">
+                  {{ slot.get_weekday_display }} | {{ slot.start_time|time:"g:i A" }}-{{ slot.end_time|time:"g:i A" }} | {{ slot.location.name }} | {{ slot.location.get_location_type_display }}
+                </option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <label class="block text-sm font-bold text-slate-700">
+              Appointment date
+              <input
+                type="date"
+                name="appointment_date"
+                min="{{ today_str }}"
+                required
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-teal focus:ring-2 focus:ring-teal/30"
+              />
+              <span class="appointment-date-hint mt-1 hidden text-xs font-semibold text-teal-700"></span>
+            </label>
+
+            <label class="block text-sm font-bold text-slate-700">
+              Reason for visit
+              <input
+                type="text"
+                name="reason_for_visit"
+                placeholder="Optional, for example fever, follow-up, consultation"
+                class="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-teal focus:ring-2 focus:ring-teal/30"
+              />
+            </label>
+
+            <button
+              type="submit"
+              class="w-full rounded-xl bg-ink px-5 py-3.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-teal"
+            >
+              Continue to Confirmation
+            </button>
+            <p class="appointment-date-error hidden rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800"></p>
+          </div>
+        </form>
+        {% else %}
+        <p class="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+          No schedules have been published yet.
+        </p>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+  (() => {
+    function selectedDateWeekday(dateValue) {
+      if (!dateValue) return null;
+      const [year, month, day] = dateValue.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+      return (date.getDay() + 6) % 7;
+    }
+
+    function nextDateForWeekday(weekday) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayWeekday = (today.getDay() + 6) % 7;
+      let daysUntil = (Number(weekday) - todayWeekday + 7) % 7;
+      if (daysUntil === 0) daysUntil = 7;
+      const nextDate = new Date(today);
+      nextDate.setDate(today.getDate() + daysUntil);
+      return nextDate;
+    }
+
+    function formatDateForInput(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    document.querySelectorAll("form[action*='/appointments/book/']").forEach((form) => {
+      const slotSelect = form.querySelector("select[name='slot_id']");
+      const dateInput = form.querySelector("input[name='appointment_date']");
+      const errorBox = form.querySelector(".appointment-date-error");
+      const hintBox = form.querySelector(".appointment-date-hint");
+      if (!slotSelect || !dateInput || !errorBox) return;
+
+      function setNextAvailableDate() {
+        const selectedOption = slotSelect.options[slotSelect.selectedIndex];
+        const allowedWeekday = selectedOption && selectedOption.dataset.weekday;
+        const allowedDayName = selectedOption && selectedOption.dataset.dayName;
+        if (allowedWeekday === undefined || allowedWeekday === "") return;
+        const nextDate = nextDateForWeekday(allowedWeekday);
+        dateInput.value = formatDateForInput(nextDate);
+        if (hintBox) {
+          hintBox.textContent = `Next available date: ${nextDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", year: "numeric" })}`;
+          hintBox.classList.remove("hidden");
+        }
+        validateAppointmentDate();
+      }
+
+      function validateAppointmentDate() {
+        const selectedOption = slotSelect.options[slotSelect.selectedIndex];
+        const allowedWeekday = selectedOption && selectedOption.dataset.weekday;
+        const allowedDayName = selectedOption && selectedOption.dataset.dayName;
+        const chosenWeekday = selectedDateWeekday(dateInput.value);
+        const isInvalid = allowedWeekday !== undefined && allowedWeekday !== "" && chosenWeekday !== null && Number(allowedWeekday) !== chosenWeekday;
+        const message = `This schedule is only available on ${allowedDayName}. Please choose a ${allowedDayName} date.`;
+
+        errorBox.classList.toggle("hidden", !isInvalid);
+        if (isInvalid) {
+          errorBox.textContent = message;
+          dateInput.setCustomValidity(message);
+        } else {
+          errorBox.textContent = "";
+          dateInput.setCustomValidity("");
+        }
+        return !isInvalid;
+      }
+
+      slotSelect.addEventListener("change", setNextAvailableDate);
+      dateInput.addEventListener("change", validateAppointmentDate);
+      form.addEventListener("submit", (event) => {
+        if (!validateAppointmentDate()) {
+          event.preventDefault();
+          event.stopPropagation();
+          dateInput.focus();
+          return false;
+        }
+      });
+    });
+  })();
+</script>
+{% endblock %}

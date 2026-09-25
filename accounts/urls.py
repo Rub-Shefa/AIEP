@@ -9,8 +9,18 @@ urlpatterns = [
 
     # Dashboards
     path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    path(
+        'admin-dashboard/products/<int:product_id>/<str:action>/',
+        views.admin_product_approval_view,
+        name='admin_product_approval',
+    ),
     path('customer-dashboard/', views.customer_dashboard_view, name='customer_dashboard'),
+    path('doctors/<int:provider_id>/', views.doctor_detail_view, name='doctor_detail'),
+    path('customer-messages/', views.customer_messages_view, name='customer_messages'),
+    path('appointments/book/<int:provider_id>/', views.book_appointment_view, name='book_appointment'),
+    path('appointments/<int:appointment_id>/cancel/', views.cancel_appointment_view, name='cancel_appointment'),
     path('seller-dashboard/', views.seller_dashboard_view, name='seller_dashboard'),
+    path('seller-messages/', views.seller_messages_view, name='seller_messages'),
     path('provider-dashboard/', views.provider_dashboard_view, name='provider_dashboard'),
     path('courier-dashboard/', views.courier_dashboard_view, name='courier_dashboard'),
     path('dashboard/', views.dashboard_redirect_view, name='dashboard'),

@@ -65,9 +65,9 @@
           {% for appt in appointments %}
             <tr class="hover:bg-slate-800/40 transition">
               <td class="p-4 font-semibold text-white">
-                {{ appt.customer.user.get_full_name|default:appt.customer.user.username }}
+                {{ appt.patient.user.get_full_name|default:appt.patient.user.username }}
               </td>
-              <td class="p-4">{{ appt.appointment_date|date:"F d, Y - h:i A" }}</td>
+              <td class="p-4">{{ appt.scheduled_time|date:"F d, Y - h:i A" }}</td>
               <td class="p-4">
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold
                   {% if appt.status == 'Completed' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/30
