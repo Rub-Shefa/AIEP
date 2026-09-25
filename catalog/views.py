@@ -22,7 +22,7 @@ def seller_product_add(request):
             product.save()
 
             if product.image:
-                product.image_url = product.image.url
+                product.image_url = ''
                 product.save(update_fields=['image_url'])
 
             messages.success(request, f"'{product.name}' was listed successfully!")
@@ -52,7 +52,7 @@ def seller_product_edit(request, pk):
             updated_product = form.save(commit=False)
             # If a new image was uploaded from the device, update image_url
             if 'image' in request.FILES and updated_product.image:
-                updated_product.image_url = updated_product.image.url
+                updated_product.image_url = ''
             updated_product.save()
 
             messages.success(request, f"'{updated_product.name}' was updated successfully!")

@@ -2,6 +2,23 @@
 
 import django.db.models.deletion
 from django.db import migrations, models
+from django.utils.text import slugify
+
+
+def populate_category_slugs(apps, schema_editor):
+    Category = apps.get_model('catalog', 'Category')
+    used_slugs = set()
+
+    for category in Category.objects.order_by('id'):
+        base_slug = slugify(category.name) or f'category-{category.id}'
+        slug = base_slug
+        suffix = 2
+        while slug in used_slugs:
+            slug = f'{base_slug}-{suffix}'
+            suffix += 1
+        category.slug = slug
+        category.save(update_fields=['slug'])
+        used_slugs.add(slug)
 
 
 class Migration(migrations.Migration):
@@ -70,8 +87,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='category',
             name='slug',
-            field=models.SlugField(blank=True, max_length=140, unique=True),
+            field=models.SlugField(blank=True, max_length=140),
         ),
+        migrations.RunPython(populate_category_slugs, migrations.RunPython.noop),
         migrations.AddField(
             model_name='product',
             name='image',
@@ -101,6 +119,11 @@ class Migration(migrations.Migration):
             model_name='category',
             name='name',
             field=models.CharField(max_length=120, unique=True),
+        ),
+        migrations.AlterField(
+            model_name='category',
+            name='slug',
+            field=models.SlugField(blank=True, max_length=140, unique=True),
         ),
         migrations.AlterField(
             model_name='product',

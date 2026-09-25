@@ -18,11 +18,13 @@ def ai_semantic_product_search(query, products_qs, limit=12):
 
     id_map = {}
     catalog_lines = []
-    for product in products_qs.select_related('category')[:300]:
+    for product in products_qs.select_related('category', 'seller__user')[:300]:
         id_map[product.id] = product
-        line = f"{product.id}: {product.name} (category: {product.category.name})"
-        if product.dosage:
-            line += f" - {product.dosage}"
+        category_name = product.category.name if product.category else "Uncategorized"
+        seller_name = product.seller.store_name or product.seller.user.username
+        line = f"{product.id}: {product.name} (category: {category_name}, seller: {seller_name})"
+        if product.description:
+            line += f" - {product.description[:180]}"
         catalog_lines.append(line)
 
     if not catalog_lines:
